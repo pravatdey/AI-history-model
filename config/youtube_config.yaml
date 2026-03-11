@@ -139,7 +139,7 @@ playlists:
   auto_create: true
   mappings:
     general: "Complete History Course - UPSC & State PSC"
-    ancient: "Ancient History - UPSC & State PSC"
+    ancient: "Complete Ancient History for UPSC & PSC"
     medieval: "Medieval History - UPSC & State PSC"
     modern: "Modern History - UPSC & State PSC"
 
