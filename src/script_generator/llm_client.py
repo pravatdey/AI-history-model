@@ -186,48 +186,40 @@ class LLMClient:
 
         Args:
             provider: LLM provider ("groq" or "ollama")
-            **kwargs: Provider-specific arguments
+            **kwargs: Provider-specific arguments (groq_api_key, groq_model, ollama_host, ollama_model)
         """
         self.provider = provider
         self.client = None
 
+        # Extract provider-specific kwargs
+        groq_kwargs = {}
+        if kwargs.get("groq_api_key"):
+            groq_kwargs["api_key"] = kwargs["groq_api_key"]
+        if kwargs.get("groq_model"):
+            groq_kwargs["model"] = kwargs["groq_model"]
+
+        ollama_kwargs = {}
+        if kwargs.get("ollama_host"):
+            ollama_kwargs["host"] = kwargs["ollama_host"]
+        if kwargs.get("ollama_model"):
+            ollama_kwargs["model"] = kwargs["ollama_model"]
+
         # Try to initialize the specified provider
         if provider == "groq":
             try:
-                self.client = GroqClient(**kwargs)
+                self.client = GroqClient(**groq_kwargs)
             except Exception as e:
                 logger.warning(f"Failed to initialize Groq: {e}")
 
         elif provider == "ollama":
             try:
-                self.client = OllamaClient(**kwargs)
+                self.client = OllamaClient(**ollama_kwargs)
             except Exception as e:
                 logger.warning(f"Failed to initialize Ollama: {e}")
 
-        # Fallback logic
-        if self.client is None:
-            logger.warning(f"Primary provider {provider} failed, trying fallback...")
-
-            if provider == "groq":
-                # Try Ollama as fallback
-                try:
-                    self.client = OllamaClient()
-                    self.provider = "ollama"
-                    logger.info("Falling back to Ollama")
-                except Exception:
-                    pass
-            else:
-                # Try Groq as fallback
-                try:
-                    self.client = GroqClient()
-                    self.provider = "groq"
-                    logger.info("Falling back to Groq")
-                except Exception:
-                    pass
-
         if self.client is None:
             raise RuntimeError(
-                "No LLM provider available. Please either:\n"
+                f"Failed to initialize LLM provider '{provider}'. Please either:\n"
                 "1. Set GROQ_API_KEY environment variable (get free key at https://console.groq.com/)\n"
                 "2. Install and run Ollama locally (https://ollama.ai/)"
             )
