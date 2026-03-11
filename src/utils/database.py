@@ -307,12 +307,16 @@ class Database:
 
     # === Generation Log Operations ===
 
-    def log_step_start(self, topic_id: int, part_number: int, step: str) -> GenerationLog:
+    def log_step_start(self, part_number: int, step: str) -> Optional[GenerationLog]:
         """Log the start of a generation step."""
         session = self.get_session()
         try:
+            topic = session.query(Topic).filter(Topic.part_number == part_number).first()
+            if not topic:
+                logger.warning(f"Cannot log step: topic Part {part_number} not found")
+                return None
             log = GenerationLog(
-                topic_id=topic_id,
+                topic_id=topic.id,
                 part_number=part_number,
                 step=step,
                 status='running',
