@@ -2,6 +2,7 @@
 
 from .pdf_generator import PDFNotesGenerator, StudyNote, TopicNote
 from .content_extractor import ContentExtractor, KeyPoint, UPSCRelevance
+from .notes_content_generator import NotesContentGenerator, GeneratedNoteContent
 
 __all__ = [
     'PDFNotesGenerator',
@@ -9,5 +10,7 @@ __all__ = [
     'TopicNote',
     'ContentExtractor',
     'KeyPoint',
-    'UPSCRelevance'
+    'UPSCRelevance',
+    'NotesContentGenerator',
+    'GeneratedNoteContent',
 ]

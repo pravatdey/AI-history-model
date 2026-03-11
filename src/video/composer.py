@@ -355,75 +355,59 @@ class VideoComposer:
         date: str,
         video_duration: float
     ) -> Optional[str]:
-        """Generate PDF study notes from script data."""
+        """
+        Generate PDF study notes from script data.
+
+        NOTE: For comprehensive 10-15 page notes with 20 MCQs + 5 Mains questions,
+        use the main pipeline's _generate_comprehensive_notes() method instead.
+        This method provides a basic fallback for direct composer usage.
+        """
         try:
             from src.notes.pdf_generator import PDFNotesGenerator, StudyNote, TopicNote
-            from src.notes.content_extractor import KeyPoint, UPSCRelevance, SubjectCategory, ExamRelevance
 
             generator = PDFNotesGenerator()
 
             # Build topics from script segments
-            topics = []
             segments = script_data.get('segments', [])
+            era = script_data.get('era', 'History')
+            exam_focus = script_data.get('exam_focus', 'BOTH')
+
+            sub_sections = []
+            all_terms = {}
+            all_questions = []
 
             for segment in segments:
-                if segment.get('type') == 'news':
-                    # Map subject string to enum
-                    subject_map = {
-                        'Polity': SubjectCategory.POLITY,
-                        'Economy': SubjectCategory.ECONOMY,
-                        'International Relations': SubjectCategory.INTERNATIONAL,
-                        'Environment': SubjectCategory.ENVIRONMENT,
-                        'Science & Technology': SubjectCategory.SCIENCE_TECH,
-                        'Social Issues': SubjectCategory.SOCIAL,
-                        'Security': SubjectCategory.SECURITY,
-                        'Geography': SubjectCategory.GEOGRAPHY,
-                        'History': SubjectCategory.HISTORY,
-                    }
+                content = segment.get('content', '')
+                kps = segment.get('key_points', [])
+                seg_title = segment.get('title', 'Content')
+                terms = segment.get('important_terms', {})
 
-                    subject_str = segment.get('subject_category', 'History')
-                    subject = subject_map.get(subject_str, SubjectCategory.CURRENT_AFFAIRS)
+                if content and len(content) > 50:
+                    sub_sections.append({
+                        'heading': seg_title,
+                        'points': kps if kps else [],
+                        'sub_points': {},
+                    })
+                all_terms.update(terms)
 
-                    # Map exam relevance
-                    relevance_str = segment.get('exam_relevance', 'BOTH')
-                    if relevance_str == 'PRELIMS':
-                        exam_relevance = ExamRelevance.PRELIMS
-                    elif relevance_str == 'MAINS':
-                        exam_relevance = ExamRelevance.MAINS
-                    else:
-                        exam_relevance = ExamRelevance.BOTH
+            topic_note = TopicNote(
+                title=title,
+                trigger_line=f"{title} - Study notes for UPSC preparation.",
+                what_is_it=f"These notes cover {title} ({era}). "
+                           f"Content is based on the video lesson script.",
+                key_provisions=[],
+                sub_sections=sub_sections,
+                challenges=[],
+                suggestions=[],
+                important_terms=all_terms,
+                practice_questions=all_questions,
+                upsc_tags=f"History | {era} | {exam_focus}",
+            )
 
-                    # Create key points
-                    key_points = [
-                        KeyPoint(text=kp, importance=3)
-                        for kp in segment.get('key_points', [])
-                    ]
-
-                    # Create UPSC relevance
-                    upsc_relevance = UPSCRelevance(
-                        subject=subject,
-                        exam_relevance=exam_relevance,
-                        syllabus_topic=subject_str,
-                        mains_paper="GS3" if subject in [SubjectCategory.ECONOMY, SubjectCategory.ENVIRONMENT, SubjectCategory.SCIENCE_TECH] else "GS2"
-                    )
-
-                    topic = TopicNote(
-                        title=segment.get('article_title', 'Topic'),
-                        summary=segment.get('content', '')[:300],
-                        key_points=key_points,
-                        upsc_relevance=upsc_relevance,
-                        important_terms=segment.get('important_terms', {}),
-                        practice_questions=[],
-                        related_topics=[],
-                        timestamp=segment.get('timestamp', '')
-                    )
-                    topics.append(topic)
-
-            # Create study note
             study_note = StudyNote(
                 title=title,
                 date=date,
-                topics=topics,
+                topics=[topic_note],
                 video_duration=video_duration
             )
 

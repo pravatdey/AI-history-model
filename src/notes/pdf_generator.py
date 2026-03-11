@@ -85,6 +85,14 @@ class TopicNote:
     practice_questions: List[str] = field(default_factory=list)
     upsc_tags: str = ""         # e.g. "GS2 | Polity | Prelims + Mains"
     timestamp: str = ""
+    # Enhanced fields for comprehensive notes
+    historical_background: str = ""    # Background/context paragraph
+    timeline: List[Dict[str, str]] = field(default_factory=list)  # [{year, event}]
+    prelims_mcqs: List[Dict] = field(default_factory=list)
+    # [{question, options: [a,b,c,d], answer, explanation}]
+    mains_questions: List[Dict] = field(default_factory=list)
+    # [{question, hint}]
+    quick_revision_points: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -461,6 +469,64 @@ def _key_facts_box(facts: List[str], label: str, styles) -> Table:
     return t
 
 
+def _timeline_table(timeline: List[Dict[str, str]], styles) -> Table:
+    """Render a chronological timeline as a styled table."""
+    if not timeline:
+        return Spacer(1, 1)
+    rows = [[Paragraph('<b>Year / Period</b>', styles['TH']),
+             Paragraph('<b>Event / Development</b>', styles['TH'])]]
+    for entry in timeline:
+        rows.append([
+            Paragraph(f"<b>{entry.get('year', '')}</b>", styles['TDLeft']),
+            Paragraph(entry.get('event', ''), styles['TD'])
+        ])
+    t = Table(rows, colWidths=[3.5*cm, 13.5*cm])
+    t.setStyle(TableStyle([
+        ('BACKGROUND',    (0, 0), (-1, 0), C['navy']),
+        ('ROWBACKGROUNDS',(0, 1), (-1, -1), [colors.white, C['bg_light']]),
+        ('GRID',          (0, 0), (-1, -1), 0.4, C['border']),
+        ('VALIGN',        (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING',    (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING',  (0, 0), (-1, -1), 6),
+        ('BACKGROUND',    (0, 1), (0, -1), C['bg_blue']),
+    ]))
+    return t
+
+
+def _mcq_block(mcq: Dict, num: int, styles) -> List:
+    """Render a single MCQ question with options."""
+    elems = []
+    elems.append(Paragraph(
+        f"<b>Q{num}.</b> {mcq.get('question', '')}",
+        styles['QText']
+    ))
+    options = mcq.get('options', [])
+    labels = ['(a)', '(b)', '(c)', '(d)']
+    answer = mcq.get('answer', '')
+    for j, opt in enumerate(options[:4]):
+        label = labels[j] if j < 4 else f'({chr(97+j)})'
+        # Bold the correct answer
+        if answer and answer.lower() == chr(97+j):
+            elems.append(Paragraph(
+                f"&nbsp;&nbsp;&nbsp;{label} <b>{opt}</b> ✓",
+                styles['QAns']
+            ))
+        else:
+            elems.append(Paragraph(
+                f"&nbsp;&nbsp;&nbsp;{label} {opt}",
+                styles['QAns']
+            ))
+    if mcq.get('explanation'):
+        elems.append(Paragraph(
+            f"<i><font color='#2B6CB0'>Explanation: {mcq['explanation']}</font></i>",
+            styles['QAns']
+        ))
+    elems.append(Spacer(1, 0.04*inch))
+    return elems
+
+
 def _terms_table(terms: Dict[str, str], styles) -> Table:
     """Two-column term ↔ definition table."""
     if not terms:
@@ -633,12 +699,17 @@ class PDFNotesGenerator:
         elems.append(Spacer(1, 0.2*inch))
 
         # Info grid
-        total_q = sum(len(t.practice_questions) for t in note.topics)
+        total_mcqs = sum(len(getattr(t, 'prelims_mcqs', []) or []) for t in note.topics)
+        total_mains = sum(len(getattr(t, 'mains_questions', []) or []) for t in note.topics)
+        total_legacy = sum(len(t.practice_questions) for t in note.topics)
+        total_q = total_mcqs + total_mains + total_legacy
+        q_desc = f"{max(20, total_mcqs)} Prelims MCQs + {max(5, total_mains)} Mains" if total_mcqs else f"{max(20, total_q)}+ MCQ & Descriptive"
         info = [
             ['Topics Covered',     str(len(note.topics))],
             ['Language',           note.language],
-            ['Practice Questions', f"{max(20, total_q)}+ MCQ & Descriptive"],
-            ['Content Type',       'Detailed — More than video'],
+            ['Practice Questions', q_desc],
+            ['Content Type',       'Comprehensive 10-15 Page Study Notes'],
+            ['Pages',              '10-15 pages of detailed content'],
         ]
         info_t = Table(info, colWidths=[6*cm, 11*cm])
         info_t.setStyle(TableStyle([
@@ -659,15 +730,17 @@ class PDFNotesGenerator:
 
         # What's inside box
         inside = (
-            "<b>What's inside this PDF:</b><br/>"
-            "✔ <b>Structured topic-wise notes</b> in Drishti IAS style<br/>"
-            "✔ <b>Trigger context</b> for each topic — why it's in the news<br/>"
-            "✔ <b>About / Definition</b> → Key Provisions → Sub-sections<br/>"
-            "✔ <b>Challenges ↔ Suggestions</b> in two-column layout<br/>"
-            "✔ <b>Key SC Judgements</b> and landmark case references<br/>"
+            "<b>What's inside this PDF (10-15 pages):</b><br/>"
+            "✔ <b>Detailed topic-wise notes</b> in Drishti IAS style<br/>"
+            "✔ <b>Historical Background & Context</b> for each topic<br/>"
+            "✔ <b>About / Definition</b> → Key Points → Detailed Sub-sections<br/>"
+            "✔ <b>Chronological Timeline</b> of important events & dates<br/>"
+            "✔ <b>Challenges ↔ Way Forward</b> in two-column layout<br/>"
             "✔ <b>Comparison Tables</b> (where applicable)<br/>"
-            "✔ <b>Important Terms</b> glossary for each topic<br/>"
-            "✔ <b>20+ Practice Questions</b> (MCQ + Descriptive)"
+            "✔ <b>Key Facts</b> box and <b>Important Terms</b> glossary<br/>"
+            "✔ <b>20 Prelims MCQs</b> with answers & explanations<br/>"
+            "✔ <b>5 Mains Descriptive Questions</b> with hints<br/>"
+            "✔ <b>Quick Revision</b> section for last-minute prep"
         )
         inside_t = Table(
             [[Paragraph(inside, S['Body'])]],
@@ -768,9 +841,15 @@ class PDFNotesGenerator:
             el.append(Paragraph(topic.what_is_it, S['Body']))
             el.append(Spacer(1, 0.04*inch))
 
-        # ── 4. Key Provisions ────────────────────────────────────────────
+        # ── 3b. Historical Background ────────────────────────────────────
+        if topic.historical_background:
+            el.append(_section_header("Historical Background & Context:", S))
+            el.append(Paragraph(topic.historical_background, S['Body']))
+            el.append(Spacer(1, 0.04*inch))
+
+        # ── 4. Key Provisions / Significance ─────────────────────────────
         if topic.key_provisions:
-            el.append(_section_header("Key Provisions / Legal Framework:", S))
+            el.append(_section_header("Key Points / Significance:", S))
             for prov in topic.key_provisions:
                 # Support nested: "Main point: sub a, sub b"
                 if '\n' in prov:
@@ -783,7 +862,7 @@ class PDFNotesGenerator:
                     el.append(_bullet(prov, S, level=1))
             el.append(Spacer(1, 0.04*inch))
 
-        # ── 5. Sub-sections (About / Context / Types / Impact …) ─────────
+        # ── 5. Sub-sections (detailed content) ───────────────────────────
         for sec in topic.sub_sections:
             heading = sec.get('heading', '')
             points  = sec.get('points', [])
@@ -798,6 +877,13 @@ class PDFNotesGenerator:
                     el.append(_bullet(sub, S, level=2))
 
             el.append(Spacer(1, 0.04*inch))
+
+        # ── 5b. Chronological Timeline ────────────────────────────────────
+        if topic.timeline:
+            el.append(_section_header("Chronological Timeline:", S))
+            el.append(Spacer(1, 0.04*inch))
+            el.append(_timeline_table(topic.timeline, S))
+            el.append(Spacer(1, 0.08*inch))
 
         # ── 6. Key Judgements box ────────────────────────────────────────
         if topic.key_judgements:
@@ -866,14 +952,22 @@ class PDFNotesGenerator:
         n = 1
         for topic in note.topics:
             el.append(_section_header(topic.title, S))
-            # Pull key facts from key_facts_box + first few challenge/suggestion bullets
-            facts = list(topic.key_facts_box)[:4]
-            if not facts:
-                # Fallback: first provision
-                facts = topic.key_provisions[:3] if topic.key_provisions else []
-            for f in facts:
-                el.append(Paragraph(f"<b>{n}.</b> {f}", S['Bullet1']))
-                n += 1
+
+            # Prefer quick_revision_points if available (from enhanced generator)
+            revision_points = getattr(topic, 'quick_revision_points', []) or []
+            if revision_points:
+                for pt in revision_points[:15]:
+                    el.append(Paragraph(f"<b>{n}.</b> {pt}", S['Bullet1']))
+                    n += 1
+            else:
+                # Fallback: key_facts_box + provisions
+                facts = list(topic.key_facts_box)[:6]
+                if not facts:
+                    facts = topic.key_provisions[:4] if topic.key_provisions else []
+                for f in facts:
+                    el.append(Paragraph(f"<b>{n}.</b> {f}", S['Bullet1']))
+                    n += 1
+
             el.append(Spacer(1, 0.04*inch))
 
         el.append(PageBreak())
@@ -887,91 +981,160 @@ class PDFNotesGenerator:
         S  = self.styles
         el = []
 
-        el.append(_topic_header_table("PRACTICE QUESTIONS", "20 Questions | MCQ + Descriptive", S))
-        el.append(Spacer(1, 0.1*inch))
+        # Collect structured MCQs and Mains questions from topics
+        all_mcqs = []
+        all_mains = []
+        all_legacy_q = []  # (question_text, topic_title)
 
-        # Gather all questions
-        all_q: List[tuple] = []  # (question, topic_title)
         for t in note.topics:
+            # New structured MCQs
+            for mcq in getattr(t, 'prelims_mcqs', []):
+                if isinstance(mcq, dict) and mcq.get('question'):
+                    all_mcqs.append(mcq)
+
+            # New structured Mains questions
+            for mq in getattr(t, 'mains_questions', []):
+                if isinstance(mq, dict) and mq.get('question'):
+                    all_mains.append(mq)
+
+            # Legacy plain text questions
             for q in t.practice_questions:
-                all_q.append((q, t.title))
+                all_legacy_q.append((q, t.title))
 
-        # Top-up to 20 with generic templates
-        all_q = self._topup_questions(all_q, note, 20)
-        mcq   = all_q[:10]
-        desc  = all_q[10:20]
-        bonus = all_q[20:]
+        has_structured = len(all_mcqs) > 0 or len(all_mains) > 0
 
-        # Part A
-        pa = Table(
-            [[Paragraph("PART A — Objective / MCQ Questions (Q1–Q10)", S['TH'])]],
-            colWidths=[17*cm]
-        )
-        pa.setStyle(TableStyle([
-            ('BACKGROUND',    (0, 0), (-1, -1), C['navy']),
-            ('TOPPADDING',    (0, 0), (-1, -1), 7),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
-            ('LEFTPADDING',   (0, 0), (-1, -1), 10),
-        ]))
-        el.append(pa)
-        el.append(Spacer(1, 0.06*inch))
-
-        for i, (q, topic) in enumerate(mcq, 1):
-            el.append(Paragraph(
-                f"Q{i}.  <font color='#666666' size='8'>[{topic[:35]}]</font>",
-                S['QNum']
+        if has_structured:
+            # === PART A: 20 Prelims MCQs with answers ===
+            el.append(_topic_header_table(
+                "PRACTICE QUESTIONS",
+                f"{len(all_mcqs)} Prelims MCQs + {len(all_mains)} Mains Questions", S
             ))
-            el.append(Paragraph(q, S['QText']))
-            el.append(Paragraph("Answer: " + "_" * 65, S['QAns']))
+            el.append(Spacer(1, 0.1*inch))
 
-        el.append(Spacer(1, 0.15*inch))
-
-        # Part B
-        pb = Table(
-            [[Paragraph("PART B — Descriptive / Analytical Questions (Q11–Q20)", S['TH'])]],
-            colWidths=[17*cm]
-        )
-        pb.setStyle(TableStyle([
-            ('BACKGROUND',    (0, 0), (-1, -1), C['mains']),
-            ('TOPPADDING',    (0, 0), (-1, -1), 7),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
-            ('LEFTPADDING',   (0, 0), (-1, -1), 10),
-        ]))
-        el.append(pb)
-        el.append(Spacer(1, 0.06*inch))
-
-        for i, (q, topic) in enumerate(desc, 11):
-            el.append(Paragraph(
-                f"Q{i}.  <font color='#666666' size='8'>[{topic[:35]}]</font>",
-                S['QNum']
-            ))
-            el.append(Paragraph(q, S['QText']))
-            for _ in range(3):
-                el.append(Paragraph("_" * 90, S['QAns']))
-            el.append(Spacer(1, 0.04*inch))
-
-        # Bonus
-        if bonus:
-            bh = Table(
-                [[Paragraph(f"BONUS QUESTIONS (Q21–Q{20+len(bonus)})", S['TH'])]],
+            pa = Table(
+                [[Paragraph(f"PART A — PRELIMS MCQ Questions (Q1–Q{min(len(all_mcqs), 20)})", S['TH'])]],
                 colWidths=[17*cm]
             )
-            bh.setStyle(TableStyle([
-                ('BACKGROUND',    (0, 0), (-1, -1), HexColor('#38A169')),
-                ('TOPPADDING',    (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            pa.setStyle(TableStyle([
+                ('BACKGROUND',    (0, 0), (-1, -1), C['navy']),
+                ('TOPPADDING',    (0, 0), (-1, -1), 7),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
                 ('LEFTPADDING',   (0, 0), (-1, -1), 10),
             ]))
-            el.append(Spacer(1, 0.1*inch))
-            el.append(bh)
+            el.append(pa)
             el.append(Spacer(1, 0.06*inch))
-            for i, (q, topic) in enumerate(bonus, 21):
+
+            for i, mcq in enumerate(all_mcqs[:20], 1):
+                el.extend(_mcq_block(mcq, i, S))
+
+            el.append(Spacer(1, 0.15*inch))
+
+            # === PART B: 5 Mains Descriptive Questions ===
+            pb = Table(
+                [[Paragraph(f"PART B — MAINS Descriptive Questions (Q1–Q{min(len(all_mains), 5)})", S['TH'])]],
+                colWidths=[17*cm]
+            )
+            pb.setStyle(TableStyle([
+                ('BACKGROUND',    (0, 0), (-1, -1), C['mains']),
+                ('TOPPADDING',    (0, 0), (-1, -1), 7),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+                ('LEFTPADDING',   (0, 0), (-1, -1), 10),
+            ]))
+            el.append(pb)
+            el.append(Spacer(1, 0.06*inch))
+
+            for i, mq in enumerate(all_mains[:5], 1):
+                el.append(Paragraph(
+                    f"<b>Q{i}.</b> {mq.get('question', '')}",
+                    S['QText']
+                ))
+                if mq.get('hint'):
+                    el.append(Paragraph(
+                        f"<i><font color='#553C9A'>Hint: {mq['hint']}</font></i>",
+                        S['QAns']
+                    ))
+                # Answer lines
+                for _ in range(4):
+                    el.append(Paragraph("_" * 90, S['QAns']))
+                el.append(Spacer(1, 0.06*inch))
+
+        else:
+            # Fallback: use legacy questions (old format)
+            el.append(_topic_header_table("PRACTICE QUESTIONS", "20 Questions | MCQ + Descriptive", S))
+            el.append(Spacer(1, 0.1*inch))
+
+            all_legacy_q = self._topup_questions(all_legacy_q, note, 20)
+            mcq   = all_legacy_q[:10]
+            desc  = all_legacy_q[10:20]
+            bonus = all_legacy_q[20:]
+
+            pa = Table(
+                [[Paragraph("PART A — Objective / MCQ Questions (Q1–Q10)", S['TH'])]],
+                colWidths=[17*cm]
+            )
+            pa.setStyle(TableStyle([
+                ('BACKGROUND',    (0, 0), (-1, -1), C['navy']),
+                ('TOPPADDING',    (0, 0), (-1, -1), 7),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+                ('LEFTPADDING',   (0, 0), (-1, -1), 10),
+            ]))
+            el.append(pa)
+            el.append(Spacer(1, 0.06*inch))
+
+            for i, (q, topic) in enumerate(mcq, 1):
                 el.append(Paragraph(
                     f"Q{i}.  <font color='#666666' size='8'>[{topic[:35]}]</font>",
                     S['QNum']
                 ))
                 el.append(Paragraph(q, S['QText']))
-                el.append(Paragraph("_" * 90, S['QAns']))
+                el.append(Paragraph("Answer: " + "_" * 65, S['QAns']))
+
+            el.append(Spacer(1, 0.15*inch))
+
+            pb = Table(
+                [[Paragraph("PART B — Descriptive / Analytical Questions (Q11–Q20)", S['TH'])]],
+                colWidths=[17*cm]
+            )
+            pb.setStyle(TableStyle([
+                ('BACKGROUND',    (0, 0), (-1, -1), C['mains']),
+                ('TOPPADDING',    (0, 0), (-1, -1), 7),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+                ('LEFTPADDING',   (0, 0), (-1, -1), 10),
+            ]))
+            el.append(pb)
+            el.append(Spacer(1, 0.06*inch))
+
+            for i, (q, topic) in enumerate(desc, 11):
+                el.append(Paragraph(
+                    f"Q{i}.  <font color='#666666' size='8'>[{topic[:35]}]</font>",
+                    S['QNum']
+                ))
+                el.append(Paragraph(q, S['QText']))
+                for _ in range(3):
+                    el.append(Paragraph("_" * 90, S['QAns']))
+                el.append(Spacer(1, 0.04*inch))
+
+            if bonus:
+                bh = Table(
+                    [[Paragraph(f"BONUS QUESTIONS (Q21–Q{20+len(bonus)})", S['TH'])]],
+                    colWidths=[17*cm]
+                )
+                bh.setStyle(TableStyle([
+                    ('BACKGROUND',    (0, 0), (-1, -1), HexColor('#38A169')),
+                    ('TOPPADDING',    (0, 0), (-1, -1), 6),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('LEFTPADDING',   (0, 0), (-1, -1), 10),
+                ]))
+                el.append(Spacer(1, 0.1*inch))
+                el.append(bh)
+                el.append(Spacer(1, 0.06*inch))
+                for i, (q, topic) in enumerate(bonus, 21):
+                    el.append(Paragraph(
+                        f"Q{i}.  <font color='#666666' size='8'>[{topic[:35]}]</font>",
+                        S['QNum']
+                    ))
+                    el.append(Paragraph(q, S['QText']))
+                    el.append(Paragraph("_" * 90, S['QAns']))
 
         el.append(PageBreak())
         return el

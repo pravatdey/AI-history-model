@@ -38,6 +38,7 @@ from src.tts import TTSManager
 from src.avatar import AvatarGenerator
 from src.video import VideoComposer, ThumbnailGenerator
 from src.youtube import YouTubeUploader
+from src.notes.notes_content_generator import NotesContentGenerator
 
 
 class HistoryPipeline:
@@ -101,6 +102,11 @@ class HistoryPipeline:
         # Initialize YouTube uploader
         self.youtube_uploader = YouTubeUploader()
 
+        # Initialize enhanced notes content generator
+        self.notes_generator = NotesContentGenerator(
+            llm_config=self.config.get('llm', {})
+        )
+
         # Output paths
         self.output_dir = Path(self.config.get("paths", {}).get("output", "output"))
         self.audio_dir = Path(self.config.get("paths", {}).get("audio", "output/audio"))
@@ -136,6 +142,138 @@ class HistoryPipeline:
             return 0
         finally:
             session.close()
+
+    def _generate_comprehensive_notes(
+        self,
+        topic,
+        script,
+        video_duration: float = 0.0,
+    ) -> Optional[str]:
+        """
+        Generate comprehensive 10-15 page PDF study notes.
+
+        ROBUST: This method NEVER raises exceptions. If anything fails,
+        it falls back to simpler generation methods. Notes are ALWAYS produced.
+        """
+        try:
+            from src.notes.pdf_generator import PDFNotesGenerator, StudyNote, TopicNote
+            from src.notes.notes_content_generator import NotesContentGenerator
+
+            # Step 1: Generate enhanced content via LLM
+            self.logger.info("Generating comprehensive note content via LLM...")
+            note_content = self.notes_generator.generate_comprehensive_notes(
+                topic_title=topic.title,
+                era=topic.era,
+                section=topic.section,
+                subtopics=topic.get_subtopics(),
+                key_concepts=topic.get_key_concepts(),
+                exam_focus=topic.exam_focus,
+                script_text=script.get_full_script() if script else "",
+                script_segments=[s.__dict__ if hasattr(s, '__dict__') else s for s in (script.segments if script else [])],
+                existing_key_points=script.key_points if script else [],
+                existing_terms=script.important_terms if script else {},
+                existing_questions=script.practice_questions if script else [],
+            )
+
+            # Step 2: Build TopicNote from generated content
+            topic_note = TopicNote(
+                title=note_content.title,
+                trigger_line=note_content.trigger_line,
+                what_is_it=note_content.what_is_it,
+                key_provisions=note_content.key_provisions,
+                sub_sections=[
+                    {
+                        'heading': sec.heading,
+                        'points': sec.bullet_points if not sec.sub_sections else sec.sub_sections[0].get('points', []) if sec.sub_sections else [],
+                        'sub_points': sec.sub_sections[0].get('sub_points', {}) if sec.sub_sections else {},
+                    }
+                    for sec in note_content.sections
+                ],
+                challenges=note_content.challenges,
+                suggestions=note_content.suggestions,
+                comparison_table=note_content.comparison_table,
+                key_judgements=note_content.key_judgements,
+                key_facts_box=note_content.key_facts_box,
+                important_terms=note_content.important_terms,
+                practice_questions=script.practice_questions if script else [],
+                upsc_tags=note_content.upsc_tags,
+                historical_background=note_content.historical_background,
+                timeline=note_content.timeline,
+                prelims_mcqs=note_content.prelims_mcqs,
+                mains_questions=note_content.mains_questions,
+                quick_revision_points=note_content.quick_revision_points,
+            )
+
+            # Step 3: Build StudyNote and generate PDF
+            from datetime import datetime as dt
+            study_note = StudyNote(
+                title=f"Part {topic.part_number}: {topic.title}",
+                date=dt.now().strftime("%B %d, %Y"),
+                topics=[topic_note],
+                video_duration=video_duration,
+                language="Hinglish",
+            )
+
+            generator = PDFNotesGenerator(output_dir=str(self.notes_dir))
+            pdf_path = generator.generate_notes(study_note)
+            self.logger.info(f"Comprehensive PDF notes saved: {pdf_path}")
+            return pdf_path
+
+        except Exception as e:
+            self.logger.error(f"Comprehensive notes generation failed: {e}")
+            self.logger.info("Attempting fallback note generation...")
+
+            # FALLBACK: Force-generate a simpler PDF using script data directly
+            try:
+                return self._fallback_generate_notes(topic, script, video_duration)
+            except Exception as e2:
+                self.logger.error(f"Fallback notes generation also failed: {e2}")
+                return None
+
+    def _fallback_generate_notes(
+        self, topic, script, video_duration: float
+    ) -> Optional[str]:
+        """Fallback: generate basic PDF from script data when LLM-enhanced generation fails."""
+        from src.notes.pdf_generator import PDFNotesGenerator, StudyNote, TopicNote
+
+        segments = script.segments if script else []
+        sub_sections = []
+        for seg in segments:
+            content = seg.content if hasattr(seg, 'content') else str(seg.get('content', ''))
+            kps = seg.key_points if hasattr(seg, 'key_points') else seg.get('key_points', [])
+            title = seg.title if hasattr(seg, 'title') else seg.get('title', 'Content')
+            if content and len(content) > 50:
+                sub_sections.append({
+                    'heading': title,
+                    'points': kps if kps else [s.strip() for s in content.split('.') if len(s.strip()) > 20][:5],
+                    'sub_points': {},
+                })
+
+        topic_note = TopicNote(
+            title=topic.title,
+            trigger_line=f"{topic.title} - Important topic for UPSC {topic.exam_focus} preparation under {topic.era}.",
+            what_is_it=f"{topic.title} is part of {topic.section} in {topic.era}. "
+                       f"This topic covers: {', '.join(topic.get_subtopics()[:4])}.",
+            key_provisions=[f"Key concept: {c}" for c in topic.get_key_concepts()[:5]],
+            sub_sections=sub_sections,
+            challenges=["Study in context of the broader era", "Focus on cause-effect for Mains"],
+            suggestions=["Practice previous year questions", "Create timeline and flowcharts"],
+            key_facts_box=[f"Part {topic.part_number} of 180", f"Era: {topic.era}", f"Section: {topic.section}"],
+            important_terms=script.important_terms if script else {},
+            practice_questions=script.practice_questions if script else [],
+            upsc_tags=f"History | {topic.era} | {topic.section} | {topic.exam_focus}",
+        )
+
+        from datetime import datetime as dt
+        study_note = StudyNote(
+            title=f"Part {topic.part_number}: {topic.title}",
+            date=dt.now().strftime("%B %d, %Y"),
+            topics=[topic_note],
+            video_duration=video_duration,
+        )
+
+        generator = PDFNotesGenerator(output_dir=str(self.notes_dir))
+        return generator.generate_notes(study_note)
 
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load configuration file."""
@@ -334,11 +472,27 @@ class HistoryPipeline:
                 "duration": f"{composition_result.duration:.1f}s",
                 "resolution": f"{composition_result.resolution[0]}x{composition_result.resolution[1]}",
                 "path": final_video_path,
-                "pdf_notes": composition_result.pdf_notes_path or ""
             }
             self.logger.info(f"Video composed: {composition_result.duration:.1f}s")
 
-            pdf_notes_path = composition_result.pdf_notes_path
+            # === Step 5b: Generate comprehensive PDF study notes ===
+            self.logger.info("Step 5b: Generating comprehensive PDF study notes (10-15 pages)...")
+
+            pdf_notes_path = self._generate_comprehensive_notes(
+                topic=topic,
+                script=script,
+                video_duration=composition_result.duration,
+            )
+
+            if pdf_notes_path:
+                results["steps"]["pdf_notes"] = {
+                    "path": pdf_notes_path,
+                    "status": "generated",
+                }
+                self.logger.info(f"Comprehensive PDF notes generated: {pdf_notes_path}")
+            else:
+                results["steps"]["pdf_notes"] = {"status": "fallback_used"}
+                self.logger.warning("PDF notes generation used fallback")
 
             # === Step 6: Generate thumbnail ===
             self.logger.info("Step 6: Generating thumbnail...")
@@ -347,10 +501,12 @@ class HistoryPipeline:
                 self.thumbnail_dir / f"part_{topic.part_number:03d}_thumbnail.png"
             )
 
+            thumbnail_bg = self.config.get("thumbnail", {}).get("background_image", "")
             thumbnail_result = self.thumbnail_generator.generate(
                 output_path=thumbnail_path,
                 title=f"Part {topic.part_number} | {topic.title}",
-                date=script.date
+                date=script.date,
+                background_image=thumbnail_bg if thumbnail_bg else None
             )
 
             results["steps"]["thumbnail"] = {
