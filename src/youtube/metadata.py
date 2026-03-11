@@ -2,6 +2,7 @@
 Metadata Generator - Generates YouTube video metadata (title, description, tags)
 """
 
+from collections import defaultdict
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 import re
@@ -132,17 +133,18 @@ class MetadataGenerator:
         title_template = metadata_config.get("title_template", "")
         if title_template and topic_metadata.get("part_number"):
             try:
-                title = title_template.format(
-                    part_number=topic_metadata.get("part_number", ""),
-                    total_parts=topic_metadata.get("total_parts", 180),
-                    topic=topic_metadata.get("topic", ""),
-                    era=topic_metadata.get("era", ""),
-                    section=topic_metadata.get("section", ""),
-                    date=date,
-                    language=language,
-                )
-            except KeyError as e:
-                logger.warning(f"Title template key missing: {e}, using default")
+                fmt_vars = defaultdict(str, {
+                    "part_number": topic_metadata.get("part_number", ""),
+                    "total_parts": topic_metadata.get("total_parts", 180),
+                    "topic": topic_metadata.get("topic", ""),
+                    "era": topic_metadata.get("era", ""),
+                    "section": topic_metadata.get("section", ""),
+                    "date": date,
+                    "language": language,
+                })
+                title = title_template.format_map(fmt_vars)
+            except (KeyError, ValueError, IndexError) as e:
+                logger.warning(f"Title template format error: {e}, using default")
                 title = f"History Part {topic_metadata.get('part_number', '')} | {topic_metadata.get('topic', '')} | UPSC & State PSC"
         else:
             # Fallback to language-based titles config
@@ -197,21 +199,22 @@ class MetadataGenerator:
 
         if template:
             try:
-                description = template.format(
-                    date=date,
-                    language=language,
-                    topics=topics_list,
-                    sources=sources_list,
-                    topic_tags=" ".join(topic_tags),
-                    part_number=topic_metadata.get("part_number", ""),
-                    total_parts=topic_metadata.get("total_parts", 180),
-                    topic=topic_metadata.get("topic", ""),
-                    era=topic_metadata.get("era", ""),
-                    section=topic_metadata.get("section", ""),
-                    subtopics=subtopics_str,
-                )
-            except KeyError as e:
-                logger.warning(f"Description template key missing: {e}, using fallback")
+                fmt_vars = defaultdict(str, {
+                    "date": date,
+                    "language": language,
+                    "topics": topics_list,
+                    "sources": sources_list,
+                    "topic_tags": " ".join(topic_tags),
+                    "part_number": topic_metadata.get("part_number", ""),
+                    "total_parts": topic_metadata.get("total_parts", 180),
+                    "topic": topic_metadata.get("topic", ""),
+                    "era": topic_metadata.get("era", ""),
+                    "section": topic_metadata.get("section", ""),
+                    "subtopics": subtopics_str,
+                })
+                description = template.format_map(fmt_vars)
+            except (KeyError, ValueError, IndexError) as e:
+                logger.warning(f"Description template format error: {e}, using fallback")
                 description = template
 
             # Replace the generic "PDF STUDY NOTES" block in the template

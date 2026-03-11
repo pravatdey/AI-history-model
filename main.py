@@ -367,6 +367,16 @@ class HistoryPipeline:
             if upload:
                 self.logger.info("Step 7: Uploading to YouTube...")
 
+                # Build topic_metadata safely before calling upload
+                topic_meta = {
+                    "part_number": topic.part_number,
+                    "total_parts": self.syllabus_mgr.get_total_parts(),
+                    "topic": topic.title,
+                    "era": topic.era,
+                    "section": topic.section,
+                    "subtopics": topic.get_subtopics(),
+                }
+
                 upload_result = self.youtube_uploader.upload_with_metadata(
                     video_path=final_video_path,
                     headlines=[
@@ -379,14 +389,7 @@ class HistoryPipeline:
                     thumbnail_path=thumbnail_path if thumbnail_result.success else None,
                     privacy_status="private" if test_mode else "public",
                     pdf_path=pdf_notes_path,
-                    topic_metadata={
-                        "part_number": topic.part_number,
-                        "total_parts": self.syllabus_mgr.get_total_parts(),
-                        "topic": topic.title,
-                        "era": topic.era,
-                        "section": topic.section,
-                        "subtopics": topic.get_subtopics(),
-                    }
+                    topic_metadata=topic_meta,
                 )
 
                 results["steps"]["upload"] = {
