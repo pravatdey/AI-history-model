@@ -275,7 +275,8 @@ class YouTubeUploader:
         date: str = None,
         thumbnail_path: str = None,
         privacy_status: str = "public",
-        pdf_path: str = None
+        pdf_path: str = None,
+        topic_metadata: dict = None
     ) -> UploadResult:
         """
         Upload video with auto-generated metadata.
@@ -291,6 +292,7 @@ class YouTubeUploader:
             thumbnail_path: Path to thumbnail
             privacy_status: Privacy status
             pdf_path: Path to PDF study notes file (optional)
+            topic_metadata: Dict with part_number, total_parts, topic, era, section, subtopics
 
         Returns:
             UploadResult object
@@ -317,7 +319,8 @@ class YouTubeUploader:
             language=language,
             sources=sources,
             pdf_link=pdf_link,
-            pdf_filename=pdf_filename
+            pdf_filename=pdf_filename,
+            topic_metadata=topic_metadata
         )
 
         return self.upload(

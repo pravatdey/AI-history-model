@@ -50,7 +50,8 @@ class MetadataGenerator:
         sources: List[str] = None,
         custom_tags: List[str] = None,
         pdf_link: str = None,
-        pdf_filename: str = None
+        pdf_filename: str = None,
+        topic_metadata: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
         Generate complete metadata for a video.
@@ -63,6 +64,7 @@ class MetadataGenerator:
             custom_tags: Additional custom tags
             pdf_link: Google Drive shareable link for the PDF study notes
             pdf_filename: Local filename of the PDF (fallback if no Drive link)
+            topic_metadata: Dict with part_number, total_parts, topic, era, section, subtopics
 
         Returns:
             Dictionary with title, description, tags, category
@@ -70,6 +72,7 @@ class MetadataGenerator:
         date = date or datetime.now().strftime("%B %d, %Y")
         sources = sources or []
         custom_tags = custom_tags or []
+        topic_metadata = topic_metadata or {}
 
         # Get language name
         language_names = {
@@ -81,7 +84,7 @@ class MetadataGenerator:
         language_name = language_names.get(language, "English")
 
         # Generate title
-        title = self._generate_title(date, language_name, headlines)
+        title = self._generate_title(date, language_name, headlines, topic_metadata)
 
         # Generate description (with PDF section)
         description = self._generate_description(
@@ -90,7 +93,8 @@ class MetadataGenerator:
             headlines=headlines,
             sources=sources,
             pdf_link=pdf_link,
-            pdf_filename=pdf_filename
+            pdf_filename=pdf_filename,
+            topic_metadata=topic_metadata
         )
 
         # Generate tags
@@ -117,21 +121,39 @@ class MetadataGenerator:
         self,
         date: str,
         language: str,
-        headlines: List[str]
+        headlines: List[str],
+        topic_metadata: Dict[str, Any] = None
     ) -> str:
         """Generate SEO-optimized title"""
+        topic_metadata = topic_metadata or {}
         metadata_config = self.config.get("metadata", {})
-        titles_config = metadata_config.get("titles", {})
 
-        # Get template for language
-        lang_code = language[:2].lower()
-        template = titles_config.get(lang_code, titles_config.get("en", ""))
-
-        if template:
-            title = template.format(date=date, language=language)
+        # Use title_template if available (for history course)
+        title_template = metadata_config.get("title_template", "")
+        if title_template and topic_metadata.get("part_number"):
+            try:
+                title = title_template.format(
+                    part_number=topic_metadata.get("part_number", ""),
+                    total_parts=topic_metadata.get("total_parts", 180),
+                    topic=topic_metadata.get("topic", ""),
+                    era=topic_metadata.get("era", ""),
+                    section=topic_metadata.get("section", ""),
+                    date=date,
+                    language=language,
+                )
+            except KeyError as e:
+                logger.warning(f"Title template key missing: {e}, using default")
+                title = f"History Part {topic_metadata.get('part_number', '')} | {topic_metadata.get('topic', '')} | UPSC & State PSC"
         else:
-            # Default format
-            title = f"History Class {date} | UPSC & State PSC | हिस्ट्री क्लास"
+            # Fallback to language-based titles config
+            titles_config = metadata_config.get("titles", {})
+            lang_code = language[:2].lower()
+            template = titles_config.get(lang_code, titles_config.get("en", ""))
+
+            if template:
+                title = template.format(date=date, language=language)
+            else:
+                title = f"History Class {date} | UPSC & State PSC | हिस्ट्री क्लास"
 
         # Ensure title is within YouTube's limit (100 chars)
         if len(title) > 100:
@@ -146,9 +168,11 @@ class MetadataGenerator:
         headlines: List[str],
         sources: List[str],
         pdf_link: str = None,
-        pdf_filename: str = None
+        pdf_filename: str = None,
+        topic_metadata: Dict[str, Any] = None
     ) -> str:
         """Generate detailed description with PDF download section."""
+        topic_metadata = topic_metadata or {}
         metadata_config = self.config.get("metadata", {})
         template = metadata_config.get("description", "")
 
@@ -161,17 +185,34 @@ class MetadataGenerator:
         # Generate topic tags
         topic_tags = self._extract_topic_tags(headlines)
 
+        # Format subtopics list
+        subtopics = topic_metadata.get("subtopics", [])
+        if isinstance(subtopics, list):
+            subtopics_str = "\n".join([f"• {s}" for s in subtopics])
+        else:
+            subtopics_str = str(subtopics) if subtopics else ""
+
         # Build PDF section with actual link (or empty if no PDF)
         pdf_section = self._build_pdf_section(pdf_link, pdf_filename)
 
         if template:
-            description = template.format(
-                date=date,
-                language=language,
-                topics=topics_list,
-                sources=sources_list,
-                topic_tags=" ".join(topic_tags)
-            )
+            try:
+                description = template.format(
+                    date=date,
+                    language=language,
+                    topics=topics_list,
+                    sources=sources_list,
+                    topic_tags=" ".join(topic_tags),
+                    part_number=topic_metadata.get("part_number", ""),
+                    total_parts=topic_metadata.get("total_parts", 180),
+                    topic=topic_metadata.get("topic", ""),
+                    era=topic_metadata.get("era", ""),
+                    section=topic_metadata.get("section", ""),
+                    subtopics=subtopics_str,
+                )
+            except KeyError as e:
+                logger.warning(f"Description template key missing: {e}, using fallback")
+                description = template
 
             # Replace the generic "PDF STUDY NOTES" block in the template
             # with the real PDF section (containing Drive link) or remove it

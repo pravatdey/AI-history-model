@@ -8,11 +8,21 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 
-from src.scraper.base_scraper import NewsArticle
 from src.script_generator.llm_client import LLMClient
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+@dataclass
+class NewsArticle:
+    """News article data (local definition for history project)."""
+    title: str
+    content: str = ""
+    summary: str = ""
+    source: str = ""
+    url: str = ""
+    date: str = ""
 
 
 class ExamRelevance(Enum):

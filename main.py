@@ -115,6 +115,28 @@ class HistoryPipeline:
 
         self.logger.info("HistoryPipeline initialized successfully")
 
+    def _reset_unuploaded_failed_topics(self) -> int:
+        """Reset failed topics that were never uploaded to YouTube back to pending."""
+        from src.utils.database import Topic
+        session = self.db.get_session()
+        try:
+            count = session.query(Topic).filter(
+                Topic.status == 'failed',
+                (Topic.youtube_id == None) | (Topic.youtube_id == '')
+            ).update({
+                'status': 'pending',
+                'error': None,
+                'started_at': None
+            }, synchronize_session='fetch')
+            session.commit()
+            return count
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"Failed to reset unuploaded topics: {e}")
+            return 0
+        finally:
+            session.close()
+
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load configuration file."""
         try:
@@ -156,6 +178,15 @@ class HistoryPipeline:
         try:
             # === Step 1: Get next topic from syllabus ===
             self.logger.info("Step 1: Getting next topic from syllabus...")
+
+            # Reset any stuck 'generating' or 'failed' topics (without youtube_id)
+            # so pipeline retries them instead of skipping ahead
+            reset_stuck = self.syllabus_mgr.reset_stuck()
+            reset_failed = self._reset_unuploaded_failed_topics()
+            if reset_stuck:
+                self.logger.info(f"Reset {reset_stuck} stuck 'generating' topics")
+            if reset_failed:
+                self.logger.info(f"Reset {reset_failed} failed (not uploaded) topics")
 
             if part_number:
                 topic = self.syllabus_mgr.get_topic_by_part(part_number)
@@ -347,7 +378,15 @@ class HistoryPipeline:
                     date=script.date,
                     thumbnail_path=thumbnail_path if thumbnail_result.success else None,
                     privacy_status="private" if test_mode else "public",
-                    pdf_path=pdf_notes_path
+                    pdf_path=pdf_notes_path,
+                    topic_metadata={
+                        "part_number": topic.part_number,
+                        "total_parts": self.syllabus_mgr.get_total_parts(),
+                        "topic": topic.title,
+                        "era": topic.era,
+                        "section": topic.section,
+                        "subtopics": topic.get_subtopics(),
+                    }
                 )
 
                 results["steps"]["upload"] = {
