@@ -286,8 +286,8 @@ class PresentationSlideGenerator:
         footer_h = 55
         footer_y = height - footer_h
 
-        # 1. Header bar (full width)
-        self._draw_header(draw, img, slide, width, header_h, colors)
+        # 1. Header bar (right panel only, so avatar doesn't overlap)
+        self._draw_header(draw, img, slide, width, header_h, colors, content_x)
 
         # 2. Right panel gradient background (subject-tinted)
         self._draw_right_panel_gradient(draw, content_x, header_h, footer_y, width, colors)
@@ -314,20 +314,20 @@ class PresentationSlideGenerator:
                 y_cursor = self._draw_terms(draw, slide.important_terms, y_cursor,
                                             content_x + 20, width - 30, colors)
 
-        # 7. Footer bar
-        self._draw_footer(draw, slide, width, height, footer_h, colors)
+        # 7. Footer bar (right panel only)
+        self._draw_footer(draw, slide, width, height, footer_h, colors, content_x)
 
         return img
 
     # ── Drawing helpers ───────────────────────────────────────────────────
 
-    def _draw_header(self, draw, img, slide, width, header_h, colors):
+    def _draw_header(self, draw, img, slide, width, header_h, colors, content_x=0):
         """Draw the slide header bar with topic number, title, exam tag."""
-        # Header background
-        draw.rectangle([(0, 0), (width, header_h)], fill=colors['header'])
+        # Header background (right panel only to avoid avatar overlap)
+        draw.rectangle([(content_x, 0), (width, header_h)], fill=colors['header'])
 
         # Bottom border
-        draw.line([(0, header_h), (width, header_h)],
+        draw.line([(content_x, header_h), (width, header_h)],
                   fill=colors['accent'], width=3)
 
         # Topic number badge
@@ -337,7 +337,7 @@ class PresentationSlideGenerator:
         badge_w = badge_bbox[2] - badge_bbox[0] + 24
         badge_h = badge_bbox[3] - badge_bbox[1] + 14
 
-        badge_x = 20
+        badge_x = content_x + 20
         badge_y = (header_h - badge_h) // 2
         draw.rounded_rectangle(
             [badge_x, badge_y, badge_x + badge_w, badge_y + badge_h],
@@ -567,13 +567,13 @@ class PresentationSlideGenerator:
 
         return badge_y + badge_h + 15
 
-    def _draw_footer(self, draw, slide, width, height, footer_h, colors):
+    def _draw_footer(self, draw, slide, width, height, footer_h, colors, content_x=0):
         """Draw the bottom footer bar."""
         footer_y = height - footer_h
-        draw.rectangle([(0, footer_y), (width, height)], fill=colors['header'])
-        draw.line([(0, footer_y), (width, footer_y)], fill=colors['accent'], width=3)
+        draw.rectangle([(content_x, footer_y), (width, height)], fill=colors['header'])
+        draw.line([(content_x, footer_y), (width, footer_y)], fill=colors['accent'], width=3)
 
-        draw.text((20, footer_y + 15), "UPSC History Course",
+        draw.text((content_x + 20, footer_y + 15), "UPSC History Course",
                   fill=(200, 210, 230), font=self.fonts['small'])
 
         sub_text = slide.subtitle
