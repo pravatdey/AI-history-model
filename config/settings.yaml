@@ -142,9 +142,9 @@ composition:
 thumbnail:
   width: 1280
   height: 720
-  format: "png"
+  format: "jpeg"
   style: "history_class"
-  background_image: ""               # Custom background image path (leave empty for generated BG)
+  background_image: "thumbnail.jpeg"               # Custom background image path (leave empty for generated BG)
 
   text:
     enabled: true
