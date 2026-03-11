@@ -480,23 +480,37 @@ class VideoComposer:
 
         # ── Resize and position avatar ───────────────────────────────────
         avatar_config = self.composition_config.get("avatar", {})
-        avatar_scale = avatar_config.get("scale", 0.55)
-
-        avatar_height = int(height * avatar_scale)
-        avatar_clip = avatar_clip.resize(height=avatar_height)
-
+        slides_config = self.composition_config.get("presentation_slides", {})
         position = avatar_config.get("position", "left")
-        x_offset = avatar_config.get("x_offset", -50)
-        y_offset = avatar_config.get("y_offset", 80)
 
         if position == "left":
-            x_pos = width // 5 - avatar_clip.w // 2 + x_offset
-        elif position == "right":
-            x_pos = 4 * width // 5 - avatar_clip.w // 2 + x_offset
-        else:  # center
-            x_pos = width // 2 - avatar_clip.w // 2 + x_offset
+            # Auto-fill left zone: avatar spans x=0 to content start, bottom-aligned
+            content_start_pct = slides_config.get("content_start_x_pct", 0.33)
+            content_start_x = int(width * content_start_pct)
 
-        y_pos = height // 2 - avatar_clip.h // 2 + y_offset
+            # Resize to fill the left zone width
+            avatar_clip = avatar_clip.resize(width=content_start_x)
+
+            # Cap height at frame height
+            if avatar_clip.h > height:
+                avatar_clip = avatar_clip.resize(height=height)
+
+            # Centre horizontally in left zone, bottom-align vertically
+            x_pos = (content_start_x - avatar_clip.w) // 2
+            y_pos = height - avatar_clip.h
+        else:
+            # Centre / right: use manual scale + offsets
+            avatar_scale = avatar_config.get("scale", 0.55)
+            avatar_height = int(height * avatar_scale)
+            avatar_clip = avatar_clip.resize(height=avatar_height)
+            x_offset = avatar_config.get("x_offset", 0)
+            y_offset = avatar_config.get("y_offset", 0)
+
+            if position == "right":
+                x_pos = 4 * width // 5 - avatar_clip.w // 2 + x_offset
+            else:
+                x_pos = width // 2 - avatar_clip.w // 2 + x_offset
+            y_pos = height // 2 - avatar_clip.h // 2 + y_offset
 
         avatar_clip = avatar_clip.set_position((x_pos, y_pos))
 

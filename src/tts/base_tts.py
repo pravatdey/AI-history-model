@@ -28,6 +28,7 @@ class TTSResult:
     voice: TTSVoice
     success: bool
     error: Optional[str] = None
+    word_timing_path: Optional[str] = None  # path to word-timing JSON for viseme lip-sync
 
 
 class BaseTTS(ABC):

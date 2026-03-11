@@ -113,10 +113,7 @@ composition:
     bullet_style: "numbered"
 
   avatar:
-    position: "left"
-    scale: 0.55
-    x_offset: -50
-    y_offset: 80
+    position: "left"                     # Auto-fills left zone (content_start_x_pct), bottom-aligned
 
   text:
     headline:
