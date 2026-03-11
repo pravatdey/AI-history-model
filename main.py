@@ -177,9 +177,6 @@ class HistoryPipeline:
             previous_topic = self.syllabus_mgr.get_topic_by_part(topic.part_number - 1)
             next_topic = self.syllabus_mgr.get_topic_by_part(topic.part_number + 1)
 
-            # Log step start
-            self.db.log_step_start(topic.part_number, "pipeline")
-
             results["steps"]["topic"] = {
                 "part_number": topic.part_number,
                 "title": topic.title,
@@ -201,7 +198,6 @@ class HistoryPipeline:
 
             # === Step 2: Generate lesson script ===
             self.logger.info("Step 2: Generating lesson script...")
-            self.db.log_step_start(topic.part_number, "script")
 
             script = self.script_writer.generate_lesson_script(
                 topic=topic,
@@ -218,12 +214,6 @@ class HistoryPipeline:
                 f.write(f"# Words: {script.word_count} | Duration: ~{script.total_duration/60:.1f} min\n\n")
                 f.write(script.get_full_script())
 
-            self.db.log_step_complete(topic.id, "script", {
-                "word_count": script.word_count,
-                "duration": script.total_duration,
-                "segments": len(script.segments)
-            })
-
             results["steps"]["script"] = {
                 "word_count": script.word_count,
                 "duration_estimate": f"{script.total_duration/60:.1f} min",
@@ -237,7 +227,6 @@ class HistoryPipeline:
 
             # === Step 3: Generate audio (TTS) ===
             self.logger.info("Step 3: Generating audio (TTS)...")
-            self.db.log_step_start(topic.part_number, "audio")
 
             audio_result = await self.tts_manager.generate_lesson_audio(
                 script_text=script.get_script_for_tts(),
@@ -248,18 +237,12 @@ class HistoryPipeline:
 
             if not audio_result.get("success"):
                 error = audio_result.get("error", "TTS generation failed")
-                self.db.log_step_failure(topic.id, "audio", error)
                 results["errors"].append(f"TTS failed: {error}")
                 self.logger.error(f"TTS failed: {error}")
                 return results
 
             audio_path = audio_result["audio_path"]
             audio_duration = audio_result["duration"]
-
-            self.db.log_step_complete(topic.id, "audio", {
-                "duration": audio_duration,
-                "voice": audio_result.get("voice", "unknown")
-            })
 
             results["steps"]["audio"] = {
                 "duration": f"{audio_duration:.1f}s ({audio_duration/60:.1f} min)",
@@ -270,7 +253,6 @@ class HistoryPipeline:
 
             # === Step 4: Generate avatar video ===
             self.logger.info("Step 4: Generating avatar video...")
-            self.db.log_step_start(topic.part_number, "avatar")
 
             avatar_path = str(self.video_dir / f"part_{topic.part_number:03d}_avatar.mp4")
 
@@ -281,15 +263,9 @@ class HistoryPipeline:
 
             if not avatar_result.success:
                 error = avatar_result.error or "Avatar generation failed"
-                self.db.log_step_failure(topic.id, "avatar", error)
                 results["errors"].append(f"Avatar failed: {error}")
                 self.logger.error(f"Avatar failed: {error}")
                 return results
-
-            self.db.log_step_complete(topic.id, "avatar", {
-                "method": avatar_result.method,
-                "duration": avatar_result.duration
-            })
 
             results["steps"]["avatar"] = {
                 "duration": f"{avatar_result.duration:.1f}s",
@@ -300,7 +276,6 @@ class HistoryPipeline:
 
             # === Step 5: Compose final video ===
             self.logger.info("Step 5: Composing final video...")
-            self.db.log_step_start(topic.part_number, "video")
 
             final_video_path = str(
                 self.video_dir / f"part_{topic.part_number:03d}_final.mp4"
@@ -320,16 +295,9 @@ class HistoryPipeline:
 
             if not composition_result.success:
                 error = composition_result.error or "Video composition failed"
-                self.db.log_step_failure(topic.id, "video", error)
                 results["errors"].append(f"Composition failed: {error}")
                 self.logger.error(f"Composition failed: {error}")
                 return results
-
-            self.db.log_step_complete(topic.id, "video", {
-                "duration": composition_result.duration,
-                "resolution": f"{composition_result.resolution[0]}x{composition_result.resolution[1]}",
-                "pdf_notes": composition_result.pdf_notes_path
-            })
 
             results["steps"]["video"] = {
                 "duration": f"{composition_result.duration:.1f}s",
@@ -367,7 +335,6 @@ class HistoryPipeline:
             # === Step 7: Upload to YouTube (if enabled) ===
             if upload:
                 self.logger.info("Step 7: Uploading to YouTube...")
-                self.db.log_step_start(topic.part_number, "upload")
 
                 upload_result = self.youtube_uploader.upload_with_metadata(
                     video_path=final_video_path,
@@ -391,10 +358,6 @@ class HistoryPipeline:
                 }
 
                 if upload_result.success:
-                    self.db.log_step_complete(topic.id, "upload", {
-                        "video_id": upload_result.video_id,
-                        "url": upload_result.video_url
-                    })
                     self.logger.info(f"Uploaded to YouTube: {upload_result.video_url}")
 
                     # Mark topic as completed in syllabus
@@ -405,7 +368,6 @@ class HistoryPipeline:
                     )
                 else:
                     error = upload_result.error or "Upload failed"
-                    self.db.log_step_failure(topic.id, "upload", error)
                     results["errors"].append(f"Upload failed: {error}")
                     self.logger.error(f"Upload failed: {error}")
             else:
@@ -420,9 +382,6 @@ class HistoryPipeline:
 
             # Pipeline complete
             results["success"] = True
-            self.db.log_step_complete(topic.id, "pipeline", {
-                "total_duration": composition_result.duration
-            })
 
             self.logger.info("=" * 60)
             self.logger.info(
