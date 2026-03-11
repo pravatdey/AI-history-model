@@ -1,0 +1,156 @@
+# YouTube Configuration - History Video Course
+
+# OAuth2 Credentials (shared with current affairs project)
+credentials:
+  client_secrets_file: "config/client_secrets.json"
+  token_file: "config/youtube_token.json"
+  scopes:
+    - "https://www.googleapis.com/auth/youtube.upload"
+    - "https://www.googleapis.com/auth/youtube"
+    - "https://www.googleapis.com/auth/youtube.force-ssl"
+
+# Channel Settings (same channel as current affairs)
+channel:
+  id: ""
+  defaults:
+    privacy_status: "public"
+    category_id: "27"                    # Education
+    license: "youtube"
+    embeddable: true
+    public_stats_viewable: true
+    made_for_kids: false
+    self_declared_made_for_kids: false
+
+# Video Metadata Templates - History Course
+metadata:
+  # Title template
+  # Placeholders: {part_number}, {total_parts}, {topic}, {era}, {section}
+  title_template: "History Part {part_number} | {topic} | UPSC & State PSC | हिस्ट्री क्लास"
+
+  # Description template
+  description: |
+    Complete History Course for UPSC & State PSC Preparation
+    Part {part_number}/{total_parts} | {era} - {section}
+
+    ═══════════════════════════════════════════════════
+    📚 TOPIC: {topic}
+    ═══════════════════════════════════════════════════
+
+    Subtopics covered in this class:
+    {subtopics}
+
+    ═══════════════════════════════════════════════════
+    📄 PDF STUDY NOTES
+    ═══════════════════════════════════════════════════
+    Download PDF notes from the pinned comment below!
+    Notes include:
+    ✅ Timeline & Chronology
+    ✅ Key Personalities & Events
+    ✅ Important Terms & Dates
+    ✅ Previous Year Questions
+    ✅ Mnemonics & Memory Aids
+    ✅ Practice Questions
+
+    ═══════════════════════════════════════════════════
+    📖 EXAM RELEVANCE
+    ═══════════════════════════════════════════════════
+    - UPSC CSE: GS Paper 1 (History, Art & Culture)
+    - State PCS: General Studies
+    - SSC, Railways, Banking: General Awareness
+    - NDA, CDS: General Knowledge
+
+    ═══════════════════════════════════════════════════
+    📋 COMPLETE COURSE STRUCTURE
+    ═══════════════════════════════════════════════════
+    Part 1-55: Ancient History (प्राचीन इतिहास)
+    Part 56-105: Medieval History (मध्यकालीन इतिहास)
+    Part 106-180: Modern History (आधुनिक इतिहास)
+
+    ═══════════════════════════════════════════════════
+    🔔 SUBSCRIBE FOR DAILY CLASSES!
+    ═══════════════════════════════════════════════════
+    New history class every day at 2:00 PM IST
+    Turn on notifications (Bell Icon)
+
+    #UPSC #History #IndianHistory #StatePSC #IAS #HistoryClass
+    #प्राचीनइतिहास #मध्यकालीनइतिहास #आधुनिकइतिहास
+    #UPSCHistory #AncientHistory #MedievalHistory #ModernHistory
+    {topic_tags}
+
+  # Default tags
+  tags:
+    - "UPSC"
+    - "UPSC history"
+    - "Indian history"
+    - "history class"
+    - "UPSC preparation"
+    - "ancient history"
+    - "medieval history"
+    - "modern history"
+    - "IAS preparation"
+    - "State PSC"
+    - "history for UPSC"
+    - "इतिहास"
+    - "हिस्ट्री क्लास"
+    - "UPSC 2026"
+    - "complete history course"
+
+  # Era-specific tags
+  era_tags:
+    ancient:
+      - "ancient Indian history"
+      - "प्राचीन भारत"
+      - "Indus Valley"
+      - "Maurya Empire"
+      - "Gupta Empire"
+      - "Vedic period"
+    medieval:
+      - "medieval Indian history"
+      - "मध्यकालीन भारत"
+      - "Delhi Sultanate"
+      - "Mughal Empire"
+      - "Bhakti movement"
+      - "Maratha Empire"
+    modern:
+      - "modern Indian history"
+      - "आधुनिक भारत"
+      - "Indian freedom struggle"
+      - "British India"
+      - "Indian National Congress"
+      - "Gandhi"
+
+# Upload Settings
+upload:
+  max_retries: 3
+  retry_delay: 60
+  chunk_size: 10485760                   # 10MB
+  timeout: 3600
+  uploads_per_day: 2
+  min_upload_interval: 3600
+
+# Thumbnail Settings
+thumbnail:
+  auto_set: true
+  max_size_mb: 2
+
+# Playlist Settings
+playlists:
+  auto_add: true
+  auto_create: true
+  mappings:
+    general: "Complete History Course - UPSC & State PSC"
+    ancient: "Ancient History - UPSC & State PSC"
+    medieval: "Medieval History - UPSC & State PSC"
+    modern: "Modern History - UPSC & State PSC"
+
+# Notifications
+notifications:
+  on_success: true
+  on_failure: true
+  methods:
+    - type: "log"
+      enabled: true
+    - type: "telegram"
+      enabled: false
+      bot_token: ""
+      chat_id: ""

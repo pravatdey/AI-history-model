@@ -1,0 +1,2137 @@
+# Complete History Syllabus - UPSC & State PSC
+# 180 Parts | Ancient → Medieval → Modern History
+# Target: 6 months (1 part per day, ~20 minutes each)
+
+syllabus:
+  name: "Complete History - UPSC & State PSC"
+  total_parts: 180
+  target_duration_minutes: 20
+  language: "hinglish"
+
+  eras:
+    # =========================================
+    # ANCIENT HISTORY (Parts 1-55)
+    # =========================================
+    - name: "Ancient History"
+      hindi_name: "प्राचीन इतिहास"
+      color_theme: "ancient"
+      parts_range: [1, 55]
+      sections:
+
+        # --- Sources of Indian History ---
+        - name: "Sources of Indian History"
+          topics:
+            - part: 1
+              title: "Introduction to Indian History & Sources"
+              subtopics:
+                - "Importance of studying Indian History for UPSC"
+                - "Literary sources - Vedas, Puranas, Buddhist & Jain texts"
+                - "Archaeological sources - Inscriptions, Coins, Monuments"
+                - "Foreign accounts - Greek, Chinese, Arab travelers"
+              key_concepts: ["Epigraphy", "Numismatics", "Archaeology", "Historiography"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Epigraphy question", "UPSC 2017 - Archaeological sources"]
+
+        # --- Prehistoric India ---
+        - name: "Prehistoric India"
+          topics:
+            - part: 2
+              title: "Stone Age - Paleolithic Period"
+              subtopics:
+                - "Lower Paleolithic - Hand axes, cleavers, choppers"
+                - "Middle Paleolithic - Flake tools, scrapers"
+                - "Upper Paleolithic - Blade tools, bone tools"
+                - "Important Paleolithic sites - Bhimbetka, Hunsgi, Attirampakkam"
+              key_concepts: ["Paleolithic", "Homo erectus", "Hunter-gatherers", "Bhimbetka"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2020 - Bhimbetka caves"]
+
+            - part: 3
+              title: "Stone Age - Mesolithic & Neolithic Periods"
+              subtopics:
+                - "Mesolithic Age - Microliths, semi-permanent settlements"
+                - "Important Mesolithic sites - Bagor, Adamgarh, Langhnaj"
+                - "Neolithic Age - Agriculture revolution, polished stone tools"
+                - "Important Neolithic sites - Burzahom, Mehrgarh, Chirand"
+              key_concepts: ["Microliths", "Neolithic Revolution", "Mehrgarh", "Domestication"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2018 - Neolithic sites"]
+
+            - part: 4
+              title: "Chalcolithic & Megalithic Cultures"
+              subtopics:
+                - "Chalcolithic Age - Copper-stone age cultures"
+                - "Important sites - Ahar, Kayatha, Malwa, Jorwe"
+                - "Iron Age & Megalithic culture"
+                - "Painted Grey Ware & Northern Black Polished Ware"
+              key_concepts: ["Chalcolithic", "Megalith", "PGW", "NBPW", "Ochre Coloured Pottery"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2016 - Chalcolithic cultures"]
+
+        # --- Indus Valley Civilization ---
+        - name: "Indus Valley Civilization"
+          topics:
+            - part: 5
+              title: "Indus Valley Civilization - Discovery & Extent"
+              subtopics:
+                - "Discovery by Dayaram Sahni & R.D. Banerji"
+                - "Geographical extent - from Sutkagen-dor to Alamgirpur"
+                - "Major sites - Harappa, Mohenjo-daro, Lothal, Dholavira"
+                - "Phases - Early, Mature & Late Harappan"
+              key_concepts: ["Harappa", "Mohenjo-daro", "Lothal", "Dholavira", "Rakhigarhi"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - IVC sites", "UPSC 2019 - Dholavira"]
+
+            - part: 6
+              title: "Indus Valley - Town Planning & Architecture"
+              subtopics:
+                - "Grid pattern town planning, citadel & lower town"
+                - "Great Bath of Mohenjo-daro"
+                - "Granaries, dockyard at Lothal"
+                - "Drainage system & water management"
+              key_concepts: ["Great Bath", "Citadel", "Grid Planning", "Dockyard"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Town planning features"]
+
+            - part: 7
+              title: "Indus Valley - Economy, Religion & Decline"
+              subtopics:
+                - "Agriculture - wheat, barley, cotton, rice"
+                - "Trade & commerce - weights, seals, ports"
+                - "Religion - Mother Goddess, Proto-Shiva, tree worship"
+                - "Script & decline theories"
+              key_concepts: ["Pashupati Seal", "Mother Goddess", "IVC Script", "Trade networks"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - IVC religion"]
+
+        # --- Vedic Period ---
+        - name: "Vedic Period"
+          topics:
+            - part: 8
+              title: "Early Vedic Period (Rig Vedic Age)"
+              subtopics:
+                - "Aryan migration debate & Rig Veda"
+                - "Political organization - Jana, Vis, Grama, Kula"
+                - "Sabha & Samiti - tribal assemblies"
+                - "Social life, economy & religion of Rig Vedic people"
+              key_concepts: ["Rig Veda", "Sabha", "Samiti", "Indra", "Varuna", "Pastoral economy"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2017 - Vedic assemblies"]
+
+            - part: 9
+              title: "Later Vedic Period"
+              subtopics:
+                - "Expansion to Gangetic plains"
+                - "Political changes - Rise of kingdoms, Ashvamedha"
+                - "Social changes - Varna system rigidity, position of women"
+                - "Religious changes - Prajapati, Brahmanical supremacy"
+              key_concepts: ["Ashvamedha", "Varna System", "Prajapati", "Upanishads"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Later Vedic society"]
+
+            - part: 10
+              title: "Vedic Literature & Philosophy"
+              subtopics:
+                - "Four Vedas - Rig, Sama, Yajur, Atharva"
+                - "Brahmanas, Aranyakas, Upanishads"
+                - "Vedangas & Upavedas"
+                - "Philosophical concepts - Karma, Dharma, Moksha"
+              key_concepts: ["Vedas", "Upanishads", "Brahmanas", "Aranyakas", "Vedangas"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Upanishadic philosophy"]
+
+        # --- Jainism & Buddhism ---
+        - name: "Jainism & Buddhism"
+          topics:
+            - part: 11
+              title: "Rise of Heterodox Sects - Background"
+              subtopics:
+                - "Causes - Brahmanical orthodoxy, Varna rigidity"
+                - "Shramana tradition & 62 heterodox sects"
+                - "Ajivikas - Makkhali Gosala, determinism"
+                - "Charvakas - Materialism philosophy"
+              key_concepts: ["Shramana", "Heterodox", "Ajivikas", "Charvakas", "Lokayata"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2016 - Heterodox sects"]
+
+            - part: 12
+              title: "Jainism - Mahavira & Core Teachings"
+              subtopics:
+                - "Life of Mahavira - 24th Tirthankara"
+                - "Five vows - Ahimsa, Satya, Asteya, Aparigraha, Brahmacharya"
+                - "Tri-ratna - Right faith, knowledge, conduct"
+                - "Anekantavada & Syadvada philosophy"
+              key_concepts: ["Mahavira", "Tri-ratna", "Anekantavada", "Panchamahavrata"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Jain philosophy"]
+
+            - part: 13
+              title: "Jainism - Councils, Sects & Literature"
+              subtopics:
+                - "Jain Councils - Pataliputra & Vallabhi"
+                - "Digambara vs Shvetambara split"
+                - "Jain literature - Agamas, Angas"
+                - "Contribution to art, architecture & Indian culture"
+              key_concepts: ["Digambara", "Shvetambara", "Agamas", "Jain Councils"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2018 - Jain sects"]
+
+            - part: 14
+              title: "Buddhism - Life & Teachings of Buddha"
+              subtopics:
+                - "Life of Siddhartha Gautama - birth to Mahaparinirvana"
+                - "Four Noble Truths & Noble Eightfold Path"
+                - "Middle Path - avoiding extremes"
+                - "Concept of Nirvana, Pratityasamutpada (Dependent Origination)"
+              key_concepts: ["Four Noble Truths", "Eightfold Path", "Middle Path", "Nirvana"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Buddhist teachings"]
+
+            - part: 15
+              title: "Buddhism - Councils, Sects & Spread"
+              subtopics:
+                - "Four Buddhist Councils - Rajgriha to Kundalvana"
+                - "Hinayana vs Mahayana vs Vajrayana"
+                - "Buddhist Sangha & Vinaya Pitaka rules"
+                - "Spread of Buddhism - Ashoka, Kanishka, Silk Route"
+              key_concepts: ["Buddhist Councils", "Hinayana", "Mahayana", "Tripitaka", "Sangha"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Buddhist councils", "UPSC 2017 - Buddhist sects"]
+
+            - part: 16
+              title: "Buddhist Literature, Art & Architecture"
+              subtopics:
+                - "Tripitaka - Vinaya, Sutta, Abhidhamma Pitaka"
+                - "Jataka tales & Milindapanha"
+                - "Buddhist architecture - Stupas, Chaityas, Viharas"
+                - "Important sites - Sanchi, Bharhut, Amaravati, Nalanda"
+              key_concepts: ["Tripitaka", "Jataka", "Stupa", "Chaitya", "Vihara", "Nalanda"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Buddhist architecture"]
+
+        # --- Mahajanapadas & Magadha ---
+        - name: "Mahajanapadas & Rise of Magadha"
+          topics:
+            - part: 17
+              title: "Sixteen Mahajanapadas"
+              subtopics:
+                - "List of 16 Mahajanapadas & their capitals"
+                - "Monarchies vs Republics (Ganas/Sanghas)"
+                - "Vajji Confederacy - republican model"
+                - "Rise of urbanization & second urbanization"
+              key_concepts: ["Mahajanapadas", "Vajji", "Gana-Sangha", "Second Urbanization"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2018 - Mahajanapadas list"]
+
+            - part: 18
+              title: "Rise of Magadha Empire"
+              subtopics:
+                - "Haryanka dynasty - Bimbisara & Ajatashatru"
+                - "Shishunaga dynasty"
+                - "Nanda dynasty - Mahapadma Nanda & Dhana Nanda"
+                - "Factors behind Magadha's rise - geography, iron, elephants"
+              key_concepts: ["Bimbisara", "Ajatashatru", "Nanda Dynasty", "Pataliputra"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2017 - Magadha rise"]
+
+            - part: 19
+              title: "Alexander's Invasion & Its Impact"
+              subtopics:
+                - "Alexander's campaign in India (326 BCE)"
+                - "Battle of Hydaspes - Alexander vs Porus"
+                - "Why Alexander turned back"
+                - "Impact - Greek influence, trade routes, political unity inspiration"
+              key_concepts: ["Alexander", "Battle of Hydaspes", "Porus", "Indo-Greek contact"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2016 - Alexander's invasion"]
+
+        # --- Mauryan Empire ---
+        - name: "Mauryan Empire"
+          topics:
+            - part: 20
+              title: "Chandragupta Maurya & Kautilya's Arthashastra"
+              subtopics:
+                - "Rise of Chandragupta Maurya - overthrow of Nandas"
+                - "Role of Chanakya/Kautilya"
+                - "Arthashastra - statecraft, administration, economy"
+                - "Seleucid War & treaty with Seleucus Nicator"
+              key_concepts: ["Chandragupta", "Kautilya", "Arthashastra", "Megasthenes", "Indica"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Arthashastra"]
+
+            - part: 21
+              title: "Ashoka the Great - Conquest & Transformation"
+              subtopics:
+                - "Ashoka's rise to power & early reign"
+                - "Kalinga War (261 BCE) & its impact"
+                - "Conversion to Buddhism - Dhamma policy"
+                - "Ashoka's Dhamma - principles & propagation"
+              key_concepts: ["Ashoka", "Kalinga War", "Dhamma", "Rock Edicts"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Ashoka's Dhamma"]
+
+            - part: 22
+              title: "Ashoka's Edicts & Mauryan Administration"
+              subtopics:
+                - "Rock Edicts, Pillar Edicts, Minor Rock Edicts"
+                - "Decipherment by James Prinsep"
+                - "Mauryan administration - Provinces, Districts, Villages"
+                - "Revenue system, espionage, military organization"
+              key_concepts: ["Edicts", "James Prinsep", "Brahmi Script", "Mauryan Administration"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Ashokan edicts"]
+
+            - part: 23
+              title: "Mauryan Economy, Society & Art"
+              subtopics:
+                - "Economy - Agriculture, trade, guilds (shrenis)"
+                - "Society - Varna system, slavery, position of women"
+                - "Mauryan art - Ashoka Pillars, Sarnath Lion Capital"
+                - "Decline of Mauryan Empire - causes & successors"
+              key_concepts: ["Shrenis", "Punch-marked coins", "Sarnath Capital", "Mauryan decline"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Mauryan economy"]
+
+        # --- Post-Mauryan Period ---
+        - name: "Post-Mauryan Period"
+          topics:
+            - part: 24
+              title: "Shunga, Kanva & Satavahana Dynasties"
+              subtopics:
+                - "Shunga dynasty - Pushyamitra Shunga, revival of Brahmanism"
+                - "Kanva dynasty - brief rule"
+                - "Satavahana dynasty - Deccan power"
+                - "Gautamiputra Satakarni & contributions"
+              key_concepts: ["Pushyamitra", "Satavahanas", "Gautamiputra Satakarni", "Deccan"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2017 - Satavahana dynasty"]
+
+            - part: 25
+              title: "Indo-Greek, Saka & Parthian Rulers"
+              subtopics:
+                - "Indo-Greek rulers - Menander (Milinda)"
+                - "Saka (Scythian) rulers - Rudradaman I"
+                - "Parthian rulers - Gondophernes"
+                - "Cultural impact - coins, art, astronomy"
+              key_concepts: ["Menander", "Milindapanha", "Rudradaman", "Junagadh inscription"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2019 - Indo-Greek rulers"]
+
+            - part: 26
+              title: "Kushan Empire & Kanishka"
+              subtopics:
+                - "Kushan dynasty origins - Yuezhi tribe"
+                - "Kanishka - greatest Kushan ruler"
+                - "Fourth Buddhist Council under Kanishka"
+                - "Gandhara & Mathura schools of art"
+              key_concepts: ["Kanishka", "Gandhara Art", "Mathura Art", "Silk Route", "Kushan coinage"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Gandhara art"]
+
+        # --- Sangam Age ---
+        - name: "Sangam Age"
+          topics:
+            - part: 27
+              title: "Sangam Age - Chera, Chola, Pandya"
+              subtopics:
+                - "Three Sangam assemblies - Madurai"
+                - "Chera dynasty - Uthiyan Cheralathan, pepper trade"
+                - "Chola dynasty - Karikala, Puhar (Kaveripattinam)"
+                - "Pandya dynasty - Nedunjeliyan, pearls & trade"
+              key_concepts: ["Sangam Literature", "Thinai system", "Tolkappiyam", "Silappadikaram"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Sangam age"]
+
+            - part: 28
+              title: "Sangam Literature, Society & Economy"
+              subtopics:
+                - "Sangam literature - Ettuthokai & Pattupattu"
+                - "Tolkappiyam - grammar text"
+                - "Five Thinai (landscape-based classification)"
+                - "Trade with Rome - Periplus, Pliny's accounts"
+              key_concepts: ["Ettuthokai", "Pattupattu", "Thinai", "Roman Trade", "Periplus"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Sangam literature"]
+
+        # --- Gupta Empire ---
+        - name: "Gupta Empire"
+          topics:
+            - part: 29
+              title: "Gupta Empire - Foundation & Expansion"
+              subtopics:
+                - "Sri Gupta & Ghatotkacha - founders"
+                - "Chandragupta I - first great Gupta ruler"
+                - "Samudragupta - 'Napoleon of India', Prayag Prashasti"
+                - "Military campaigns & policy of Digvijay"
+              key_concepts: ["Samudragupta", "Prayag Prashasti", "Harishena", "Digvijay"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Samudragupta"]
+
+            - part: 30
+              title: "Chandragupta II & Gupta Administration"
+              subtopics:
+                - "Chandragupta II Vikramaditya - golden age"
+                - "Conquest of Shakas, Navaratna court"
+                - "Fa Hien's visit & account"
+                - "Administrative system - provinces, districts, villages"
+              key_concepts: ["Vikramaditya", "Fa Hien", "Navaratna", "Gupta Administration"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Gupta administration"]
+
+            - part: 31
+              title: "Gupta Age - Science, Literature & Learning"
+              subtopics:
+                - "Aryabhata - mathematics & astronomy"
+                - "Varahamihira - Brihat Samhita"
+                - "Kalidasa - Shakuntala, Meghaduta"
+                - "Nalanda & Vikramashila universities"
+              key_concepts: ["Aryabhata", "Kalidasa", "Nalanda", "Decimal system", "Zero concept"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Gupta era science"]
+
+            - part: 32
+              title: "Gupta Art, Architecture & Decline"
+              subtopics:
+                - "Gupta temple architecture - Dashavatara, Tigawa"
+                - "Ajanta & Ellora caves (Gupta phase)"
+                - "Iron Pillar of Delhi - metallurgical marvel"
+                - "Decline - Hunas invasion, internal weaknesses"
+              key_concepts: ["Ajanta", "Iron Pillar", "Gupta Temples", "Huna invasion"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Gupta architecture"]
+
+        # --- Post-Gupta Period ---
+        - name: "Post-Gupta & Regional Kingdoms"
+          topics:
+            - part: 33
+              title: "Harsha & Post-Gupta North India"
+              subtopics:
+                - "Pushyabhuti dynasty - Harsha of Kannauj"
+                - "Harshacharita by Banabhatta"
+                - "Xuanzang (Hiuen Tsang) - Chinese traveler's account"
+                - "Harsha's administration, Kanauj Assembly, decline"
+              key_concepts: ["Harsha", "Banabhatta", "Xuanzang", "Kanauj Assembly"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2017 - Harsha's reign"]
+
+            - part: 34
+              title: "Chalukyas of Badami"
+              subtopics:
+                - "Pulakeshin I - founder"
+                - "Pulakeshin II - defeated Harsha, Aihole inscription"
+                - "Chalukya art - Aihole, Badami, Pattadakal temples"
+                - "Vesara style of architecture"
+              key_concepts: ["Pulakeshin II", "Aihole Inscription", "Vesara Style", "Pattadakal"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Chalukya art"]
+
+            - part: 35
+              title: "Pallava Dynasty"
+              subtopics:
+                - "Pallava origins & key rulers"
+                - "Mahendravarman I & Narasimhavarman I (Mamallapuram)"
+                - "Shore Temple & Pancha Rathas"
+                - "Pallava architecture - rock-cut to structural temples"
+              key_concepts: ["Mamallapuram", "Shore Temple", "Pancha Rathas", "Pallava art"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Pallava architecture"]
+
+            - part: 36
+              title: "Rashtrakuta Dynasty"
+              subtopics:
+                - "Dantidurga - founder"
+                - "Krishna I - Kailasa Temple at Ellora"
+                - "Amoghavarsha - Jain scholar, Kavirajamarga"
+                - "Rashtrakuta contribution to art & culture"
+              key_concepts: ["Kailasa Temple", "Ellora", "Amoghavarsha", "Kavirajamarga"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Kailasa temple"]
+
+        # --- South Indian Dynasties ---
+        - name: "South Indian Dynasties"
+          topics:
+            - part: 37
+              title: "Chola Empire - Rise & Administration"
+              subtopics:
+                - "Vijayalaya - founder of Imperial Cholas"
+                - "Rajaraja Chola I - conquests, Brihadeshwara Temple"
+                - "Rajendra Chola I - Gangaikonda Cholapuram, naval expeditions"
+                - "Chola administration - Ur, Sabha, Nagaram (local self-government)"
+              key_concepts: ["Rajaraja I", "Rajendra I", "Brihadeshwara", "Chola Local Govt"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Chola administration"]
+
+            - part: 38
+              title: "Chola Art, Economy & Maritime Trade"
+              subtopics:
+                - "Chola bronze sculptures - Nataraja"
+                - "Temple architecture - Dravidian style"
+                - "Maritime trade - Southeast Asia connections"
+                - "Chola inscriptions - Uttaramerur inscription"
+              key_concepts: ["Nataraja Bronze", "Dravidian Architecture", "Uttaramerur", "SE Asian trade"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Chola bronzes"]
+
+            - part: 39
+              title: "Chalukyas of Kalyani & Hoysalas"
+              subtopics:
+                - "Western Chalukyas of Kalyani"
+                - "Hoysala dynasty - Vishnuvardhana"
+                - "Hoysala temples - Belur, Halebid, Somnathpur"
+                - "Star-shaped temple platform, intricate carvings"
+              key_concepts: ["Hoysala Temples", "Belur", "Halebid", "Soapstone carvings"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2018 - Hoysala architecture"]
+
+            - part: 40
+              title: "Pandya Revival & Kakatiya Dynasty"
+              subtopics:
+                - "Later Pandya dynasty revival"
+                - "Kakatiya dynasty - Warangal, Rudramadevi"
+                - "Kakatiya architecture - Thousand Pillar Temple"
+                - "Eastern Ganga dynasty - Konark Sun Temple"
+              key_concepts: ["Rudramadevi", "Warangal Fort", "Konark", "Thousand Pillar Temple"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2019 - Konark temple"]
+
+        # --- Ancient Indian Culture ---
+        - name: "Ancient Indian Culture & Society"
+          topics:
+            - part: 41
+              title: "Ancient Indian Art & Sculpture"
+              subtopics:
+                - "Evolution of sculpture - Mauryan to Gupta"
+                - "Gandhara vs Mathura vs Amaravati schools"
+                - "Buddhist, Hindu & Jain sculpture traditions"
+                - "Terracotta, ivory & metal works"
+              key_concepts: ["Gandhara School", "Mathura School", "Amaravati School", "Greco-Buddhist art"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Sculpture schools comparison"]
+
+            - part: 42
+              title: "Ancient Architecture - Temples & Caves"
+              subtopics:
+                - "Rock-cut caves - Barabar, Ajanta, Ellora, Elephanta"
+                - "Nagara vs Dravidian vs Vesara temple styles"
+                - "Evolution from rock-cut to structural temples"
+                - "Important temple sites across India"
+              key_concepts: ["Nagara Style", "Dravidian Style", "Vesara Style", "Rock-cut Architecture"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Temple architecture styles"]
+
+            - part: 43
+              title: "Ancient Indian Literature"
+              subtopics:
+                - "Sanskrit literature - Ramayana, Mahabharata, Puranas"
+                - "Pali & Prakrit literature"
+                - "Tamil Sangam literature"
+                - "Scientific texts - Arthashastra, Charaka Samhita, Sushruta Samhita"
+              key_concepts: ["Ramayana", "Mahabharata", "Arthashastra", "Charaka", "Sushruta"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Ancient literature"]
+
+            - part: 44
+              title: "Ancient Indian Science & Technology"
+              subtopics:
+                - "Mathematics - Aryabhata, Brahmagupta, zero & decimal"
+                - "Astronomy - Surya Siddhanta, heliocentric ideas"
+                - "Medicine - Ayurveda, surgery (Sushruta)"
+                - "Metallurgy - Wootz steel, zinc extraction, Iron Pillar"
+              key_concepts: ["Aryabhata", "Brahmagupta", "Ayurveda", "Wootz Steel"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Ancient Indian science"]
+
+            - part: 45
+              title: "Ancient Indian Philosophy - Six Schools"
+              subtopics:
+                - "Samkhya (Kapila), Yoga (Patanjali)"
+                - "Nyaya (Gautama), Vaisheshika (Kanada)"
+                - "Mimamsa (Jaimini), Vedanta (Badarayana/Shankaracharya)"
+                - "Comparison of orthodox & heterodox schools"
+              key_concepts: ["Shad Darshana", "Samkhya", "Yoga", "Nyaya", "Vedanta"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Indian philosophy schools"]
+
+            - part: 46
+              title: "Social Life in Ancient India"
+              subtopics:
+                - "Varna & Jati system - evolution & rigidity"
+                - "Position of women across periods"
+                - "Education system - Gurukula, universities"
+                - "Family structure, marriage customs, food habits"
+              key_concepts: ["Varna", "Jati", "Gurukula", "Ashrama System"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2018 - Ancient social structure"]
+
+            - part: 47
+              title: "Economic Life in Ancient India"
+              subtopics:
+                - "Agriculture - techniques, irrigation systems"
+                - "Trade guilds (Shrenis) & trade routes"
+                - "Coinage - punch-marked to Kushan gold coins"
+                - "Port cities & maritime trade with Rome, SE Asia"
+              key_concepts: ["Shrenis", "Punch-marked Coins", "Silk Route", "Spice Trade"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2019 - Ancient trade routes"]
+
+            - part: 48
+              title: "Religious Developments - Hinduism Evolution"
+              subtopics:
+                - "Vedic religion to Puranic Hinduism"
+                - "Rise of Shaivism & Vaishnavism"
+                - "Bhagavata cult & incarnation theory"
+                - "Temple worship tradition development"
+              key_concepts: ["Shaivism", "Vaishnavism", "Bhagavata", "Puranic Hinduism"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2017 - Religious evolution"]
+
+        # --- Ancient History Revision ---
+        - name: "Ancient History - Comprehensive Revision"
+          topics:
+            - part: 49
+              title: "Ancient History Timeline & Chronology Revision"
+              subtopics:
+                - "Complete timeline from Stone Age to 12th century"
+                - "Dynasty succession chart with key dates"
+                - "Mapping dynasties to geographical regions"
+                - "Key turning points in Ancient Indian History"
+              key_concepts: ["Timeline", "Chronology", "Dynasty Chart", "Key Dates"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 50
+              title: "Ancient History - Previous Year Questions Analysis (Part 1)"
+              subtopics:
+                - "UPSC Prelims PYQs on Ancient History (2015-2020)"
+                - "Pattern analysis - most asked topics"
+                - "MCQ solving techniques for Ancient History"
+                - "Common traps & elimination strategies"
+              key_concepts: ["PYQ Analysis", "MCQ Techniques", "Pattern Recognition"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 51
+              title: "Ancient History - Previous Year Questions Analysis (Part 2)"
+              subtopics:
+                - "UPSC Prelims PYQs on Ancient History (2021-2025)"
+                - "State PSC PYQs on Ancient History"
+                - "Mains GS1 questions on Ancient History"
+                - "Answer writing framework for Ancient History"
+              key_concepts: ["PYQ Analysis", "Mains Writing", "State PSC Patterns"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 52
+              title: "Art & Culture Revision - Ancient Period"
+              subtopics:
+                - "Complete revision of architecture styles"
+                - "Sculpture schools comparison chart"
+                - "Important sites & their dynasties"
+                - "UNESCO World Heritage Sites from Ancient India"
+              key_concepts: ["Architecture Revision", "Sculpture Revision", "Heritage Sites"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 53
+              title: "Maps & Geography of Ancient India"
+              subtopics:
+                - "Map-based questions practice"
+                - "Important ancient sites on India map"
+                - "Trade routes - land & maritime"
+                - "Geographical factors in rise & fall of empires"
+              key_concepts: ["Map Practice", "Ancient Sites", "Trade Routes"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 54
+              title: "Ancient History - Comparative Analysis"
+              subtopics:
+                - "Maurya vs Gupta Empire comparison"
+                - "Buddhist vs Jain teachings comparison"
+                - "North vs South Indian dynasties comparison"
+                - "Evolution of polity from tribal to imperial"
+              key_concepts: ["Comparative Analysis", "Empire Comparison", "Political Evolution"]
+              exam_focus: "MAINS"
+              previous_year_refs: []
+
+            - part: 55
+              title: "Ancient History - Grand Revision & Summary"
+              subtopics:
+                - "100 most important facts from Ancient History"
+                - "Mnemonics & memory aids for dates & dynasties"
+                - "Quick revision flashcards approach"
+                - "Transition to Medieval History - what to expect"
+              key_concepts: ["Grand Revision", "Mnemonics", "Key Facts", "Transition"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+    # =========================================
+    # MEDIEVAL HISTORY (Parts 56-105)
+    # =========================================
+    - name: "Medieval History"
+      hindi_name: "मध्यकालीन इतिहास"
+      color_theme: "medieval"
+      parts_range: [56, 105]
+      sections:
+
+        # --- Early Medieval Period ---
+        - name: "Early Medieval India"
+          topics:
+            - part: 56
+              title: "Introduction to Medieval India - Transition Period"
+              subtopics:
+                - "Defining Medieval period (8th-18th century)"
+                - "Indian feudalism debate"
+                - "Rajput kingdoms - origin & expansion"
+                - "Tripartite struggle - Pratiharas, Palas, Rashtrakutas"
+              key_concepts: ["Indian Feudalism", "Rajputs", "Tripartite Struggle", "Samanta System"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Tripartite struggle"]
+
+            - part: 57
+              title: "Rajput Dynasties & Kingdoms"
+              subtopics:
+                - "Pratiharas of Kannauj - Mihira Bhoja"
+                - "Palas of Bengal - Dharmapala, Devapala"
+                - "Chahamanas (Chauhans) - Prithviraj III"
+                - "Rajput military tactics & chivalry code"
+              key_concepts: ["Pratiharas", "Palas", "Prithviraj III", "Rajput Honor Code"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2017 - Rajput kingdoms"]
+
+            - part: 58
+              title: "Arab Invasion of Sindh & Early Turkish Raids"
+              subtopics:
+                - "Muhammad bin Qasim - conquest of Sindh (712 CE)"
+                - "Mahmud of Ghazni - 17 raids (997-1030 CE)"
+                - "Mahmud's raids on Somnath & other temples"
+                - "Al-Biruni & Kitab-ul-Hind"
+              key_concepts: ["Muhammad bin Qasim", "Mahmud of Ghazni", "Al-Biruni", "Somnath"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Turkish invasions"]
+
+            - part: 59
+              title: "Muhammad of Ghor & Battles of Tarain"
+              subtopics:
+                - "Muhammad of Ghor's invasions"
+                - "First Battle of Tarain (1191) - Prithviraj wins"
+                - "Second Battle of Tarain (1192) - Ghor wins"
+                - "Battle of Chandawar & conquest of North India"
+              key_concepts: ["Battles of Tarain", "Muhammad of Ghor", "Qutb-ud-din Aibak"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2016 - Tarain battles"]
+
+        # --- Delhi Sultanate ---
+        - name: "Delhi Sultanate"
+          topics:
+            - part: 60
+              title: "Slave Dynasty (Mamluk) - Part 1"
+              subtopics:
+                - "Qutb-ud-din Aibak - foundation of Delhi Sultanate"
+                - "Iltutmish - consolidation, silver tanka, iqta system"
+                - "Razia Sultan - first woman ruler of Delhi"
+                - "Qutub Minar & early Indo-Islamic architecture"
+              key_concepts: ["Aibak", "Iltutmish", "Razia Sultan", "Iqta System", "Tanka"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Delhi Sultanate administration"]
+
+            - part: 61
+              title: "Slave Dynasty (Mamluk) - Part 2"
+              subtopics:
+                - "Balban - blood & iron policy, divine kingship"
+                - "Balban's administrative reforms"
+                - "Mongol threat & defense measures"
+                - "End of Mamluk dynasty"
+              key_concepts: ["Balban", "Blood & Iron", "Nizam-i-Forty", "Divine Kingship"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2018 - Balban's policies"]
+
+            - part: 62
+              title: "Khilji Dynasty"
+              subtopics:
+                - "Jalal-ud-din Khilji - founder"
+                - "Alauddin Khilji - market reforms, military conquests"
+                - "Alauddin's Deccan campaigns - Devagiri, Warangal"
+                - "Economic reforms - price control, rationing"
+              key_concepts: ["Alauddin Khilji", "Market Reforms", "Price Control", "Deccan Campaigns"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Alauddin's reforms"]
+
+            - part: 63
+              title: "Tughlaq Dynasty - Part 1"
+              subtopics:
+                - "Ghiyasuddin Tughlaq - founder"
+                - "Muhammad bin Tughlaq - experiments & controversies"
+                - "Transfer of capital from Delhi to Daulatabad"
+                - "Token currency experiment & its failure"
+              key_concepts: ["Muhammad bin Tughlaq", "Daulatabad", "Token Currency", "Ibn Battuta"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Tughlaq experiments"]
+
+            - part: 64
+              title: "Tughlaq Dynasty - Part 2 & Firoz Shah"
+              subtopics:
+                - "Firoz Shah Tughlaq - welfare measures"
+                - "Irrigation works - canals & gardens"
+                - "Firoz Shah's patronage of learning"
+                - "Decline of Tughlaq dynasty, Timur's invasion (1398)"
+              key_concepts: ["Firoz Shah", "Canal System", "Timur's Invasion", "Welfare State"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2017 - Firoz Shah's reforms"]
+
+            - part: 65
+              title: "Sayyid & Lodi Dynasties"
+              subtopics:
+                - "Sayyid dynasty - Khizr Khan, weak rulers"
+                - "Lodi dynasty - Bahlol Lodi, Sikandar Lodi"
+                - "Ibrahim Lodi - last Delhi Sultan"
+                - "First Battle of Panipat (1526) - end of Delhi Sultanate"
+              key_concepts: ["Sayyid Dynasty", "Lodi Dynasty", "First Battle of Panipat"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2016 - Sultanate decline"]
+
+            - part: 66
+              title: "Delhi Sultanate - Administration & Revenue"
+              subtopics:
+                - "Central administration - Sultan, Wazir, Diwan"
+                - "Provincial administration - Iqta system"
+                - "Revenue system - Kharaj, Khams, Jizya, Zakat"
+                - "Military administration - standing army, cavalry"
+              key_concepts: ["Iqta System", "Kharaj", "Jizya", "Wazir", "Diwan-i-Arz"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Sultanate administration"]
+
+            - part: 67
+              title: "Delhi Sultanate - Society, Economy & Culture"
+              subtopics:
+                - "Indo-Islamic culture synthesis"
+                - "Urban growth & trade expansion"
+                - "Architecture - Indo-Islamic style evolution"
+                - "Literature - Amir Khusrau, Persian & Hindi blend"
+              key_concepts: ["Indo-Islamic Culture", "Amir Khusrau", "Quwwat-ul-Islam", "Synthesis"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Sultanate culture"]
+
+        # --- Bhakti & Sufi Movements ---
+        - name: "Bhakti & Sufi Movements"
+          topics:
+            - part: 68
+              title: "Bhakti Movement - Origins & Early Saints"
+              subtopics:
+                - "Origins in South India - Alvars & Nayanars"
+                - "Shankaracharya - Advaita Vedanta"
+                - "Ramanuja - Vishishtadvaita"
+                - "Madhvacharya - Dvaita philosophy"
+              key_concepts: ["Alvars", "Nayanars", "Advaita", "Vishishtadvaita", "Dvaita"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Bhakti saints"]
+
+            - part: 69
+              title: "Bhakti Movement - North Indian Saints"
+              subtopics:
+                - "Kabir - Nirguna Bhakti, bridge between Hindus & Muslims"
+                - "Guru Nanak - Sikhism foundation"
+                - "Ramananda, Ravidas, Dadu Dayal"
+                - "Mirabai, Tulsidas, Surdas - Saguna Bhakti"
+              key_concepts: ["Kabir", "Guru Nanak", "Nirguna", "Saguna", "Bhakti Poetry"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Bhakti saints comparison"]
+
+            - part: 70
+              title: "Sufi Movement"
+              subtopics:
+                - "Origins of Sufism - Islamic mysticism"
+                - "Sufi orders in India - Chishti, Suhrawardi, Qadiri, Naqshbandi"
+                - "Key Sufi saints - Moinuddin Chishti, Nizamuddin Auliya"
+                - "Impact on Indian society - composite culture, music (Qawwali)"
+              key_concepts: ["Chishti", "Suhrawardi", "Khanqah", "Silsila", "Qawwali"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Sufi orders"]
+
+        # --- Vijayanagara & Bahmani ---
+        - name: "Vijayanagara & Bahmani Kingdoms"
+          topics:
+            - part: 71
+              title: "Vijayanagara Empire - Rise & Dynasties"
+              subtopics:
+                - "Foundation by Harihara & Bukka (1336)"
+                - "Sangama, Saluva, Tuluva, Aravidu dynasties"
+                - "Krishnadeva Raya - greatest ruler"
+                - "Administration, Nayankara & Ayagar systems"
+              key_concepts: ["Krishnadeva Raya", "Hampi", "Nayankara System", "Amatya-Nayaka"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Vijayanagara administration"]
+
+            - part: 72
+              title: "Vijayanagara - Art, Culture & Decline"
+              subtopics:
+                - "Hampi - capital city & UNESCO site"
+                - "Vijayanagara architecture - Vitthala Temple, Lotus Mahal"
+                - "Literature & music patronage"
+                - "Battle of Talikota (1565) & decline"
+              key_concepts: ["Hampi", "Vitthala Temple", "Talikota", "Vijayanagara Art"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Hampi"]
+
+            - part: 73
+              title: "Bahmani Sultanate & Deccan Sultanates"
+              subtopics:
+                - "Bahmani Sultanate foundation (1347)"
+                - "Key rulers - Firoz Shah, Mahmud Gawan"
+                - "Break-up into five Deccan Sultanates"
+                - "Bijapur, Golconda, Ahmadnagar, Bidar, Berar"
+              key_concepts: ["Bahmani", "Mahmud Gawan", "Deccan Sultanates", "Gol Gumbaz"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2018 - Deccan sultanates"]
+
+        # --- Mughal Empire ---
+        - name: "Mughal Empire"
+          topics:
+            - part: 74
+              title: "Babur - Foundation of Mughal Empire"
+              subtopics:
+                - "Babur's background - Timur & Genghis Khan lineage"
+                - "First Battle of Panipat (1526) vs Ibrahim Lodi"
+                - "Battle of Khanwa (1527) vs Rana Sanga"
+                - "Baburnama - autobiography & legacy"
+              key_concepts: ["Babur", "Panipat 1526", "Khanwa", "Baburnama", "Gunpowder warfare"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2017 - Babur's battles"]
+
+            - part: 75
+              title: "Humayun & Sher Shah Suri"
+              subtopics:
+                - "Humayun's struggles & exile"
+                - "Sher Shah Suri - administration reforms"
+                - "Grand Trunk Road, revenue system, Rupiya coin"
+                - "Humayun's return & death"
+              key_concepts: ["Sher Shah Suri", "Grand Trunk Road", "Rupiya", "Revenue Reforms"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Sher Shah's reforms"]
+
+            - part: 76
+              title: "Akbar the Great - Part 1: Conquests & Policies"
+              subtopics:
+                - "Akbar's early reign & Bairam Khan regency"
+                - "Military conquests - Gujarat, Bengal, Rajputana"
+                - "Rajput policy - marriage alliances, Mansabdari"
+                - "Battle of Haldighati (1576) vs Rana Pratap"
+              key_concepts: ["Akbar", "Mansabdari", "Haldighati", "Rajput Alliance"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Akbar's Rajput policy"]
+
+            - part: 77
+              title: "Akbar the Great - Part 2: Administration & Reforms"
+              subtopics:
+                - "Central administration - Wazir, Diwan, Mir Bakshi"
+                - "Mansabdari system - Zat & Sawar ranks"
+                - "Land revenue - Todar Mal's Bandobast/Zabti system"
+                - "Provincial administration - Subas, Sarkars, Parganas"
+              key_concepts: ["Mansabdari", "Zabti System", "Todar Mal", "Ain-i-Akbari"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Mughal administration"]
+
+            - part: 78
+              title: "Akbar - Religious Policy & Din-i-Ilahi"
+              subtopics:
+                - "Akbar's religious tolerance evolution"
+                - "Abolition of Jizya, Sulh-i-kul policy"
+                - "Ibadat Khana debates at Fatehpur Sikri"
+                - "Din-i-Ilahi - syncretic religion"
+              key_concepts: ["Din-i-Ilahi", "Sulh-i-kul", "Ibadat Khana", "Fatehpur Sikri"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Akbar's religious policy"]
+
+            - part: 79
+              title: "Akbar's Cultural Contributions & Navaratnas"
+              subtopics:
+                - "Navaratnas - nine gems of Akbar's court"
+                - "Abu'l Fazl - Ain-i-Akbari, Akbarnama"
+                - "Tansen, Birbal, Man Singh, Todar Mal"
+                - "Art - Mughal miniature painting, architecture"
+              key_concepts: ["Navaratnas", "Abu'l Fazl", "Mughal Painting", "Fatehpur Sikri"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Mughal culture"]
+
+            - part: 80
+              title: "Jahangir & Nur Jahan"
+              subtopics:
+                - "Jahangir's reign - Chain of Justice"
+                - "Nur Jahan - 'Junta' group, real power behind throne"
+                - "Art & painting patronage - naturalistic style"
+                - "Relations with English - Sir Thomas Roe"
+              key_concepts: ["Jahangir", "Nur Jahan", "Chain of Justice", "Thomas Roe"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2017 - Jahangir's reign"]
+
+            - part: 81
+              title: "Shah Jahan - Golden Age of Mughal Architecture"
+              subtopics:
+                - "Shah Jahan's reign & conquests"
+                - "Taj Mahal, Red Fort, Jama Masjid"
+                - "Peacock Throne & Kohinoor diamond"
+                - "War of succession among sons"
+              key_concepts: ["Shah Jahan", "Taj Mahal", "Red Fort", "Mughal Architecture Peak"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Mughal architecture"]
+
+            - part: 82
+              title: "Aurangzeb - Policies & Expansion"
+              subtopics:
+                - "Aurangzeb's rise - imprisonment of Shah Jahan"
+                - "Religious policies - reimposition of Jizya"
+                - "Deccan campaigns - annexation of Bijapur & Golconda"
+                - "Conflict with Marathas, Sikhs, Rajputs, Jats"
+              key_concepts: ["Aurangzeb", "Jizya", "Deccan Wars", "Religious Orthodoxy"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Aurangzeb's policies"]
+
+            - part: 83
+              title: "Decline of Mughal Empire"
+              subtopics:
+                - "Later Mughals - Bahadur Shah I to Bahadur Shah Zafar"
+                - "Causes of decline - weak successors, Jagirdari crisis"
+                - "Nadir Shah's invasion (1739) & Ahmad Shah Abdali"
+                - "Rise of regional powers - Awadh, Bengal, Hyderabad"
+              key_concepts: ["Mughal Decline", "Jagirdari Crisis", "Nadir Shah", "Regional Powers"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Mughal decline"]
+
+            - part: 84
+              title: "Mughal Administration - Comprehensive Review"
+              subtopics:
+                - "Central, provincial & local administration"
+                - "Revenue system - Zabti, Batai, Nasaq"
+                - "Military system - Mansabdari details"
+                - "Judicial system - Qazi, Kotwal, Muhtasib"
+              key_concepts: ["Zabti", "Batai", "Qazi", "Mughal Bureaucracy"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2021 - Mughal revenue system"]
+
+        # --- Maratha Empire ---
+        - name: "Maratha Empire"
+          topics:
+            - part: 85
+              title: "Shivaji - Rise of the Maratha Empire"
+              subtopics:
+                - "Shivaji's early life & background"
+                - "Guerrilla warfare & fort conquests"
+                - "Conflict with Bijapur - killing of Afzal Khan"
+                - "Conflict with Mughals - Treaty of Purandar"
+              key_concepts: ["Shivaji", "Guerrilla Warfare", "Afzal Khan", "Treaty of Purandar"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Shivaji's military strategy"]
+
+            - part: 86
+              title: "Shivaji - Administration & Legacy"
+              subtopics:
+                - "Coronation at Raigad (1674)"
+                - "Ashtapradhan council - eight ministers"
+                - "Revenue system - Chauth & Sardeshmukhi"
+                - "Navy, fort system, religious tolerance"
+              key_concepts: ["Ashtapradhan", "Chauth", "Sardeshmukhi", "Raigad"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Maratha administration"]
+
+            - part: 87
+              title: "Maratha Empire After Shivaji"
+              subtopics:
+                - "Sambhaji & Rajaram"
+                - "Rise of Peshwas - Balaji Vishwanath"
+                - "Baji Rao I - greatest Peshwa, expansion"
+                - "Balaji Baji Rao & Third Battle of Panipat (1761)"
+              key_concepts: ["Peshwa", "Baji Rao I", "Third Panipat", "Maratha Confederacy"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Peshwa period"]
+
+        # --- Sikh Empire & Other Powers ---
+        - name: "Regional Powers"
+          topics:
+            - part: 88
+              title: "Sikh Empire - Guru Nanak to Ranjit Singh"
+              subtopics:
+                - "Ten Sikh Gurus - from Nanak to Gobind Singh"
+                - "Khalsa foundation by Guru Gobind Singh"
+                - "Banda Bahadur & Sikh Misls"
+                - "Maharaja Ranjit Singh - Lion of Punjab"
+              key_concepts: ["Khalsa", "Ranjit Singh", "Sikh Misls", "Treaty of Amritsar"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Sikh history"]
+
+            - part: 89
+              title: "Regional Kingdoms - Awadh, Bengal, Hyderabad"
+              subtopics:
+                - "Nawabs of Awadh - Saadat Khan to Shuja-ud-Daulah"
+                - "Nawabs of Bengal - Murshid Quli Khan to Siraj-ud-Daulah"
+                - "Nizam of Hyderabad - Asaf Jah dynasty"
+                - "Mysore under Hyder Ali"
+              key_concepts: ["Awadh", "Bengal Nawabs", "Hyderabad", "Hyder Ali"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2017 - Regional powers"]
+
+        # --- Medieval Culture ---
+        - name: "Medieval Indian Culture"
+          topics:
+            - part: 90
+              title: "Indo-Islamic Architecture"
+              subtopics:
+                - "Evolution of Indo-Islamic style"
+                - "Sultanate architecture - Qutub Minar, Alai Darwaza"
+                - "Provincial styles - Jaunpur, Malwa, Bengal, Gujarat"
+                - "Mughal architecture - from Babri Masjid to Red Fort"
+              key_concepts: ["Indo-Islamic Style", "True Arch", "Dome", "Pietra Dura", "Charbagh"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Indo-Islamic architecture"]
+
+            - part: 91
+              title: "Medieval Indian Painting & Music"
+              subtopics:
+                - "Mughal miniature painting - evolution"
+                - "Rajput painting schools - Mewar, Kangra, Bundi"
+                - "Medieval music - Amir Khusrau's contributions"
+                - "Hindustani & Carnatic music divergence"
+              key_concepts: ["Mughal Miniatures", "Rajput Painting", "Amir Khusrau", "Raga System"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Medieval painting"]
+
+            - part: 92
+              title: "Medieval Literature & Languages"
+              subtopics:
+                - "Persian literature - court poetry & chronicles"
+                - "Growth of regional languages - Hindi, Bengali, Marathi"
+                - "Bhakti literature in vernacular languages"
+                - "Urdu origin & development"
+              key_concepts: ["Persian Literature", "Regional Languages", "Bhakti Literature", "Urdu"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2018 - Medieval literature"]
+
+            - part: 93
+              title: "Medieval Society & Economy"
+              subtopics:
+                - "Social structure - caste, women, slavery"
+                - "Agricultural practices & land tenure"
+                - "Trade & commerce - guilds, markets, foreign trade"
+                - "Urbanization & craft production"
+              key_concepts: ["Medieval Economy", "Land Tenure", "Trade Guilds", "Urbanization"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2017 - Medieval economy"]
+
+        # --- Medieval History Revision ---
+        - name: "Medieval History - Revision"
+          topics:
+            - part: 94
+              title: "Medieval History Timeline & Dynasty Chart"
+              subtopics:
+                - "Complete medieval timeline (8th-18th century)"
+                - "Sultanate & Mughal dynasty succession"
+                - "Regional powers parallel timeline"
+                - "Key battles & their significance"
+              key_concepts: ["Timeline", "Dynasty Chart", "Key Battles", "Chronology"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 95
+              title: "Delhi Sultanate vs Mughal Empire - Comparison"
+              subtopics:
+                - "Administrative system comparison"
+                - "Revenue system comparison"
+                - "Religious policies comparison"
+                - "Cultural contributions comparison"
+              key_concepts: ["Comparative Analysis", "Administration", "Revenue", "Culture"]
+              exam_focus: "MAINS"
+              previous_year_refs: []
+
+            - part: 96
+              title: "Medieval Art & Architecture Revision"
+              subtopics:
+                - "Architecture evolution - Sultanate to Mughal"
+                - "Major monuments with dynasties & dates"
+                - "Painting schools comparison"
+                - "UNESCO Heritage Sites from Medieval India"
+              key_concepts: ["Architecture Revision", "Monument Chart", "Heritage Sites"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 97
+              title: "Medieval History PYQ Analysis - Part 1"
+              subtopics:
+                - "UPSC Prelims PYQs on Medieval History (2015-2020)"
+                - "Pattern analysis - frequently tested topics"
+                - "MCQ solving strategies"
+                - "Common confusion areas & clarifications"
+              key_concepts: ["PYQ Analysis", "MCQ Strategy", "Pattern Recognition"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 98
+              title: "Medieval History PYQ Analysis - Part 2"
+              subtopics:
+                - "UPSC Prelims & Mains PYQs (2021-2025)"
+                - "State PSC PYQs on Medieval History"
+                - "Mains GS1 answer writing for Medieval History"
+                - "Important themes & angles"
+              key_concepts: ["PYQ Analysis", "Mains Writing", "State PSC"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 99
+              title: "Religious Movements Comprehensive Revision"
+              subtopics:
+                - "Bhakti Movement saints - complete chart"
+                - "Sufi orders & saints - complete chart"
+                - "Sikh Gurus timeline"
+                - "Comparative study of religious movements"
+              key_concepts: ["Bhakti Revision", "Sufi Revision", "Sikh History", "Comparison"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 100
+              title: "Maps & Important Places - Medieval India"
+              subtopics:
+                - "Map of Sultanate & Mughal territories"
+                - "Important medieval cities & capitals"
+                - "Battle sites on map"
+                - "Trade routes & port cities"
+              key_concepts: ["Map Practice", "Medieval Geography", "Battle Sites"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 101
+              title: "Mughal Empire Comprehensive Revision"
+              subtopics:
+                - "Six Great Mughals - complete comparison"
+                - "Mughal administration flowchart"
+                - "Mughal art & architecture milestones"
+                - "Foreign travelers' accounts compilation"
+              key_concepts: ["Mughal Revision", "Emperor Comparison", "Administration Chart"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 102
+              title: "Maratha & Regional Powers Revision"
+              subtopics:
+                - "Maratha expansion map & timeline"
+                - "Peshwa period comparison"
+                - "Regional kingdoms summary chart"
+                - "Transition to colonial period"
+              key_concepts: ["Maratha Revision", "Regional Powers", "Transition"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 103
+              title: "Medieval History - Themes for Mains"
+              subtopics:
+                - "Theme: Religious tolerance & syncretism"
+                - "Theme: Administrative evolution"
+                - "Theme: Economic changes under Sultanate & Mughals"
+                - "Theme: Cultural synthesis & composite culture"
+              key_concepts: ["Mains Themes", "Analytical Framework", "Essay Topics"]
+              exam_focus: "MAINS"
+              previous_year_refs: []
+
+            - part: 104
+              title: "Medieval History - 100 Key Facts"
+              subtopics:
+                - "50 most important facts - Delhi Sultanate"
+                - "50 most important facts - Mughal Empire"
+                - "Mnemonics for dates & dynasties"
+                - "Quick revision flashcards"
+              key_concepts: ["Key Facts", "Mnemonics", "Quick Revision"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 105
+              title: "Medieval History Grand Summary & Transition"
+              subtopics:
+                - "Complete medieval history in one class"
+                - "Connecting medieval to modern - continuity & change"
+                - "European arrival in India - setting the stage"
+                - "Preview of Modern History section"
+              key_concepts: ["Grand Summary", "Transition", "European Arrival"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+    # =========================================
+    # MODERN HISTORY (Parts 106-180)
+    # =========================================
+    - name: "Modern History"
+      hindi_name: "आधुनिक इतिहास"
+      color_theme: "modern"
+      parts_range: [106, 180]
+      sections:
+
+        # --- European Penetration ---
+        - name: "European Penetration"
+          topics:
+            - part: 106
+              title: "European Arrival - Portuguese, Dutch, French"
+              subtopics:
+                - "Vasco da Gama & Portuguese in India (1498)"
+                - "Portuguese settlements - Goa, Daman, Diu"
+                - "Dutch East India Company in India"
+                - "French East India Company - Pondicherry, Dupleix"
+              key_concepts: ["Vasco da Gama", "Estado da India", "Dutch VOC", "French EIC"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2017 - European companies"]
+
+            - part: 107
+              title: "British East India Company - Establishment"
+              subtopics:
+                - "Formation of British East India Company (1600)"
+                - "Early factories - Surat, Madras, Calcutta"
+                - "Rivalry with French - Carnatic Wars"
+                - "Battle of Plassey (1757) & its significance"
+              key_concepts: ["EIC", "Battle of Plassey", "Carnatic Wars", "Robert Clive"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Battle of Plassey"]
+
+            - part: 108
+              title: "British Expansion - Buxar to Subsidiary Alliance"
+              subtopics:
+                - "Battle of Buxar (1764) & Treaty of Allahabad"
+                - "Dual Government in Bengal"
+                - "Warren Hastings - reforms & controversies"
+                - "Subsidiary Alliance system of Wellesley"
+              key_concepts: ["Battle of Buxar", "Dual Government", "Subsidiary Alliance", "Wellesley"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - British expansion"]
+
+            - part: 109
+              title: "Doctrine of Lapse & Consolidation"
+              subtopics:
+                - "Lord Dalhousie & Doctrine of Lapse"
+                - "Annexation of Satara, Jhansi, Nagpur, Awadh"
+                - "Other policies - railways, telegraph, postal"
+                - "Anglo-Mysore Wars & Tipu Sultan"
+              key_concepts: ["Doctrine of Lapse", "Dalhousie", "Tipu Sultan", "Anglo-Mysore Wars"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Doctrine of Lapse"]
+
+            - part: 110
+              title: "Anglo-Maratha Wars & Anglo-Sikh Wars"
+              subtopics:
+                - "Three Anglo-Maratha Wars (1775-1818)"
+                - "Treaty of Bassein & end of Maratha power"
+                - "Anglo-Sikh Wars (1845-1849)"
+                - "Annexation of Punjab"
+              key_concepts: ["Anglo-Maratha Wars", "Treaty of Bassein", "Anglo-Sikh Wars"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2017 - Anglo wars"]
+
+        # --- British Economic Policies ---
+        - name: "British Economic Policies"
+          topics:
+            - part: 111
+              title: "British Land Revenue Systems"
+              subtopics:
+                - "Permanent Settlement (1793) - Bengal, Bihar"
+                - "Ryotwari System - Madras, Bombay"
+                - "Mahalwari System - North India"
+                - "Impact on Indian agriculture & peasantry"
+              key_concepts: ["Permanent Settlement", "Ryotwari", "Mahalwari", "Zamindari"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Land revenue systems"]
+
+            - part: 112
+              title: "Economic Impact of British Rule"
+              subtopics:
+                - "Drain of Wealth theory - Dadabhai Naoroji"
+                - "Deindustrialization of India"
+                - "Commercialization of agriculture"
+                - "Famines under British rule"
+              key_concepts: ["Drain Theory", "Deindustrialization", "Dadabhai Naoroji", "Famines"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Economic drain"]
+
+            - part: 113
+              title: "Railways, Infrastructure & Modern Industries"
+              subtopics:
+                - "Introduction of railways (1853) - dual impact"
+                - "Telegraph, postal system, modern education"
+                - "Rise of Indian modern industries - Tata, Birla"
+                - "Indian economic critique of colonialism"
+              key_concepts: ["Railways Impact", "Modern Industries", "Colonial Infrastructure"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2018 - Railways impact"]
+
+        # --- Social & Religious Reform ---
+        - name: "Social & Religious Reform Movements"
+          topics:
+            - part: 114
+              title: "Raja Ram Mohan Roy & Brahmo Samaj"
+              subtopics:
+                - "Raja Ram Mohan Roy - Father of Indian Renaissance"
+                - "Brahmo Samaj - reforms, beliefs, impact"
+                - "Campaign against Sati - Regulation XVII (1829)"
+                - "Contribution to education & press freedom"
+              key_concepts: ["Ram Mohan Roy", "Brahmo Samaj", "Sati Abolition", "Indian Renaissance"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Social reform"]
+
+            - part: 115
+              title: "Arya Samaj & Other Reform Movements"
+              subtopics:
+                - "Dayananda Saraswati & Arya Samaj"
+                - "Prarthana Samaj - M.G. Ranade"
+                - "Ramakrishna Mission - Swami Vivekananda"
+                - "Theosophical Society - Annie Besant"
+              key_concepts: ["Dayananda", "Arya Samaj", "Vivekananda", "Annie Besant"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Reform movements"]
+
+            - part: 116
+              title: "Islamic & Sikh Reform Movements"
+              subtopics:
+                - "Aligarh Movement - Sir Syed Ahmad Khan"
+                - "Deoband Movement & Firangi Mahal"
+                - "Ahmadiyya Movement"
+                - "Singh Sabha Movement & Akali Movement"
+              key_concepts: ["Aligarh Movement", "Sir Syed", "Deoband", "Singh Sabha"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Islamic reforms"]
+
+            - part: 117
+              title: "Social Reform - Caste, Women & Education"
+              subtopics:
+                - "Jyotiba Phule - Satyashodhak Samaj"
+                - "Pandita Ramabai & women's education"
+                - "Widow Remarriage Act (1856) - Ishwar Chandra Vidyasagar"
+                - "Anti-caste movements in South India - Periyar"
+              key_concepts: ["Jyotiba Phule", "Vidyasagar", "Periyar", "Women's Reform"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Social reform movements"]
+
+        # --- Revolt of 1857 ---
+        - name: "Revolt of 1857"
+          topics:
+            - part: 118
+              title: "Revolt of 1857 - Causes & Outbreak"
+              subtopics:
+                - "Political causes - Doctrine of Lapse, annexations"
+                - "Economic causes - exploitation, revenue policies"
+                - "Military causes - greased cartridges, discrimination"
+                - "Social & religious causes - Christian missionaries, reforms"
+              key_concepts: ["1857 Revolt", "Greased Cartridges", "Mangal Pandey", "Causes"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - 1857 revolt causes"]
+
+            - part: 119
+              title: "Revolt of 1857 - Spread, Leaders & Suppression"
+              subtopics:
+                - "Centers of revolt - Delhi, Kanpur, Lucknow, Jhansi"
+                - "Key leaders - Bahadur Shah, Nana Sahib, Rani Lakshmibai, Tantia Tope"
+                - "Reasons for failure - limited spread, lack of unity"
+                - "British suppression & aftermath"
+              key_concepts: ["Rani Lakshmibai", "Nana Sahib", "Tantia Tope", "Bahadur Shah Zafar"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - 1857 leaders"]
+
+            - part: 120
+              title: "Revolt of 1857 - Consequences & Historiography"
+              subtopics:
+                - "Government of India Act 1858 - Crown takes over"
+                - "Queen Victoria's Proclamation"
+                - "Reorganization of army, administration"
+                - "Different interpretations - Sepoy Mutiny vs First War of Independence"
+              key_concepts: ["Act of 1858", "Queen's Proclamation", "Historiography", "First War"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - 1857 consequences"]
+
+        # --- Indian National Movement ---
+        - name: "Indian National Movement - Early Phase"
+          topics:
+            - part: 121
+              title: "Rise of Indian Nationalism - Factors"
+              subtopics:
+                - "Western education & political consciousness"
+                - "Role of press & literature"
+                - "Economic nationalism - drain theory critique"
+                - "Political associations before INC"
+              key_concepts: ["Indian Nationalism", "Political Consciousness", "Press Role"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Rise of nationalism"]
+
+            - part: 122
+              title: "Indian National Congress - Foundation & Moderates"
+              subtopics:
+                - "Formation of INC (1885) - A.O. Hume"
+                - "Moderate leaders - Dadabhai Naoroji, Gokhale, Surendranath"
+                - "Methods - petitions, prayers, constitutional means"
+                - "Achievements & limitations of Moderates"
+              key_concepts: ["INC Formation", "Moderates", "Dadabhai Naoroji", "Gokhale"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Moderate phase"]
+
+            - part: 123
+              title: "Extremist Phase & Swadeshi Movement"
+              subtopics:
+                - "Rise of Extremism - Lal-Bal-Pal"
+                - "Partition of Bengal (1905) & Swadeshi Movement"
+                - "Boycott, national education, self-reliance"
+                - "Surat Split (1907) - Moderates vs Extremists"
+              key_concepts: ["Lal-Bal-Pal", "Swadeshi", "Bengal Partition", "Surat Split"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Swadeshi movement"]
+
+            - part: 124
+              title: "Revolutionary Movement - Part 1"
+              subtopics:
+                - "Anushilan Samiti & Jugantar"
+                - "India House London - Shyamji Krishna Varma"
+                - "Assassination of Curzon Wyllie"
+                - "Ghadar Party - formation & activities"
+              key_concepts: ["Anushilan Samiti", "Ghadar Party", "Revolutionary Terrorism"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Revolutionary movement"]
+
+            - part: 125
+              title: "Revolutionary Movement - Part 2"
+              subtopics:
+                - "Hindustan Republican Association (HRA/HSRA)"
+                - "Bhagat Singh, Sukhdev, Rajguru"
+                - "Kakori Train Robbery, Lahore Conspiracy Case"
+                - "Surya Sen & Chittagong Armory Raid"
+              key_concepts: ["Bhagat Singh", "HSRA", "Kakori", "Chittagong", "Chandrashekhar Azad"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Revolutionary leaders"]
+
+        # --- Gandhian Era ---
+        - name: "Gandhian Era"
+          topics:
+            - part: 126
+              title: "Mahatma Gandhi - South Africa & Early India"
+              subtopics:
+                - "Gandhi in South Africa - Satyagraha experiments"
+                - "Return to India (1915) - Champaran, Kheda, Ahmedabad"
+                - "Rowlatt Act (1919) & Jallianwala Bagh Massacre"
+                - "Gandhi's philosophy - Ahimsa, Satyagraha, Swaraj"
+              key_concepts: ["Satyagraha", "Champaran", "Jallianwala Bagh", "Rowlatt Act"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Gandhian movements"]
+
+            - part: 127
+              title: "Non-Cooperation & Khilafat Movement"
+              subtopics:
+                - "Khilafat issue - Hindu-Muslim unity"
+                - "Non-Cooperation Movement (1920-22)"
+                - "Chauri Chaura incident & withdrawal"
+                - "Impact & significance"
+              key_concepts: ["Non-Cooperation", "Khilafat", "Chauri Chaura", "Swaraj"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - NCM"]
+
+            - part: 128
+              title: "Simon Commission & Nehru Report"
+              subtopics:
+                - "Simon Commission (1927) - 'Go Back Simon'"
+                - "Lala Lajpat Rai's death"
+                - "Nehru Report - Motilal Nehru"
+                - "Purna Swaraj resolution (1929) - Lahore Congress"
+              key_concepts: ["Simon Commission", "Nehru Report", "Purna Swaraj", "Lahore Congress"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Simon Commission"]
+
+            - part: 129
+              title: "Civil Disobedience Movement"
+              subtopics:
+                - "Dandi March (1930) - Salt Satyagraha"
+                - "Spread across India - No Tax campaigns"
+                - "First Round Table Conference"
+                - "Gandhi-Irwin Pact (1931)"
+              key_concepts: ["Dandi March", "Salt Satyagraha", "Gandhi-Irwin Pact", "CDM"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Civil Disobedience"]
+
+            - part: 130
+              title: "Round Table Conferences & Communal Award"
+              subtopics:
+                - "Second & Third Round Table Conferences"
+                - "Communal Award & Poona Pact (1932)"
+                - "Gandhi vs Ambedkar debate"
+                - "Government of India Act 1935"
+              key_concepts: ["Round Table", "Poona Pact", "Communal Award", "GoI Act 1935"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Poona Pact"]
+
+            - part: 131
+              title: "Congress Ministries & World War II Impact"
+              subtopics:
+                - "1937 Provincial elections - Congress ministries"
+                - "Muslim League growth - Jinnah's rise"
+                - "World War II - Congress resignation"
+                - "August Offer (1940) & Individual Satyagraha"
+              key_concepts: ["1937 Elections", "August Offer", "Congress Ministries", "WWII Impact"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - 1937 elections"]
+
+            - part: 132
+              title: "Quit India Movement (1942)"
+              subtopics:
+                - "'Do or Die' - August 8, 1942"
+                - "Spread of movement - underground resistance"
+                - "Parallel governments - Ballia, Satara, Midnapore"
+                - "British suppression & significance"
+              key_concepts: ["Quit India", "Do or Die", "Parallel Governments", "Underground"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Quit India"]
+
+            - part: 133
+              title: "Subhas Chandra Bose & INA"
+              subtopics:
+                - "Bose's early career & Congress presidency"
+                - "Forward Bloc & escape from India"
+                - "Indian National Army (Azad Hind Fauj)"
+                - "INA trials & impact on Indian independence"
+              key_concepts: ["Subhas Bose", "INA", "Azad Hind", "Forward Bloc", "INA Trials"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - INA"]
+
+        # --- Constitutional Development ---
+        - name: "Constitutional Development"
+          topics:
+            - part: 134
+              title: "Constitutional Development - Regulating Act to Charter Acts"
+              subtopics:
+                - "Regulating Act 1773 - Governor General of Bengal"
+                - "Pitt's India Act 1784 - Board of Control"
+                - "Charter Acts of 1813, 1833, 1853"
+                - "Evolution of British Indian governance"
+              key_concepts: ["Regulating Act", "Pitt's Act", "Charter Acts", "Board of Control"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Constitutional development"]
+
+            - part: 135
+              title: "Indian Councils Acts & Morley-Minto Reforms"
+              subtopics:
+                - "Indian Councils Act 1861 - legislative councils"
+                - "Indian Councils Act 1892 - indirect elections"
+                - "Morley-Minto Reforms 1909 - separate electorates"
+                - "Montague-Chelmsford Reforms 1919 - Dyarchy"
+              key_concepts: ["Indian Councils", "Morley-Minto", "Separate Electorates", "Dyarchy"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Constitutional reforms"]
+
+            - part: 136
+              title: "Government of India Act 1935 & Independence"
+              subtopics:
+                - "GoI Act 1935 - federal structure, provincial autonomy"
+                - "Cripps Mission (1942)"
+                - "Cabinet Mission Plan (1946)"
+                - "Mountbatten Plan & Indian Independence Act 1947"
+              key_concepts: ["GoI Act 1935", "Cabinet Mission", "Mountbatten Plan", "Independence Act"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Constitutional development"]
+
+        # --- Partition & Independence ---
+        - name: "Partition & Independence"
+          topics:
+            - part: 137
+              title: "Communalism & Pakistan Demand"
+              subtopics:
+                - "Growth of communalism - causes & factors"
+                - "Muslim League - Lahore Resolution (1940)"
+                - "Two-Nation Theory - Jinnah vs Congress"
+                - "Direct Action Day (1946) & communal riots"
+              key_concepts: ["Two-Nation Theory", "Lahore Resolution", "Direct Action Day"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Communalism"]
+
+            - part: 138
+              title: "Towards Independence & Partition"
+              subtopics:
+                - "Post-WWII context - Labour government in Britain"
+                - "Royal Indian Navy Mutiny (1946)"
+                - "Interim Government formation"
+                - "Partition plan - Radcliffe Line, mass migration, violence"
+              key_concepts: ["RIN Mutiny", "Interim Government", "Radcliffe Line", "Partition"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Partition"]
+
+            - part: 139
+              title: "Integration of Princely States"
+              subtopics:
+                - "Sardar Patel & V.P. Menon's role"
+                - "Integration of Junagadh, Hyderabad, Kashmir"
+                - "Instrument of Accession"
+                - "Reorganization of states - linguistic basis"
+              key_concepts: ["Sardar Patel", "Princely States", "Instrument of Accession"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Princely states integration"]
+
+        # --- Post-Independence India ---
+        - name: "Post-Independence India"
+          topics:
+            - part: 140
+              title: "Making of the Constitution"
+              subtopics:
+                - "Constituent Assembly - composition & committees"
+                - "Key debates - fundamental rights, directive principles"
+                - "Ambedkar's role as Chairman of Drafting Committee"
+                - "Adoption of Constitution (26 Nov 1949)"
+              key_concepts: ["Constituent Assembly", "Ambedkar", "Fundamental Rights", "DPSP"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Constitution making"]
+
+            - part: 141
+              title: "Nehruvian Era - Domestic Policies"
+              subtopics:
+                - "Five Year Plans - mixed economy model"
+                - "Land reforms - Zamindari abolition"
+                - "Industrialization - public sector, steel plants"
+                - "Education - IITs, IIMs, universities"
+              key_concepts: ["Nehruvian Era", "Five Year Plans", "Mixed Economy", "Land Reforms"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2019 - Post-independence policies"]
+
+            - part: 142
+              title: "Nehruvian Era - Foreign Policy & NAM"
+              subtopics:
+                - "Non-Alignment Movement (NAM) - founding principles"
+                - "Panchsheel Agreement with China"
+                - "Indo-China War 1962"
+                - "India's role in Bandung Conference"
+              key_concepts: ["NAM", "Panchsheel", "Indo-China War", "Bandung Conference"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - NAM"]
+
+        # --- Tribal & Peasant Movements ---
+        - name: "Tribal & Peasant Movements"
+          topics:
+            - part: 143
+              title: "Peasant Movements in Colonial India"
+              subtopics:
+                - "Indigo Revolt (1859-60)"
+                - "Deccan Riots (1875)"
+                - "Mappila Rebellions - Malabar"
+                - "Champaran & Kheda Satyagraha"
+              key_concepts: ["Indigo Revolt", "Deccan Riots", "Mappila", "Peasant Movements"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Peasant movements"]
+
+            - part: 144
+              title: "Tribal Movements"
+              subtopics:
+                - "Santhal Rebellion (1855-56)"
+                - "Munda Rebellion - Birsa Munda"
+                - "Kol Uprising, Bhil Revolt"
+                - "Rampa Rebellion - Alluri Sitarama Raju"
+              key_concepts: ["Santhal", "Birsa Munda", "Alluri Sitarama Raju", "Tribal Revolt"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - Tribal movements"]
+
+        # --- Women & Dalit Movements ---
+        - name: "Women & Dalit Movements"
+          topics:
+            - part: 145
+              title: "Women in Indian Freedom Struggle"
+              subtopics:
+                - "Women's participation in national movement"
+                - "Sarojini Naidu, Kasturba Gandhi, Annie Besant"
+                - "Women's organizations - AIWC, WIA"
+                - "Women's rights legislation in colonial era"
+              key_concepts: ["Sarojini Naidu", "AIWC", "Women's Participation", "Gender Rights"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2019 - Women in freedom struggle"]
+
+            - part: 146
+              title: "Dr. B.R. Ambedkar & Dalit Movement"
+              subtopics:
+                - "Ambedkar's life & education"
+                - "Anti-caste movement - Mahad Satyagraha, temple entry"
+                - "Poona Pact & Depressed Classes representation"
+                - "Ambedkar's role in Constitution & Buddhist conversion"
+              key_concepts: ["Ambedkar", "Mahad Satyagraha", "Poona Pact", "Social Justice"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2021 - Ambedkar's contribution"]
+
+        # --- Press, Education & Governance ---
+        - name: "Press, Education & British Governance"
+          topics:
+            - part: 147
+              title: "Development of Press in India"
+              subtopics:
+                - "Early press - Bengal Gazette, Sambad Kaumudi"
+                - "Vernacular Press Act 1878"
+                - "Role of press in freedom movement"
+                - "Notable editors - Tilak, Gandhi, Ambedkar"
+              key_concepts: ["Vernacular Press Act", "Freedom Press", "Tilak", "Kesari"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2018 - Press in India"]
+
+            - part: 148
+              title: "Education Under British Rule"
+              subtopics:
+                - "Macaulay's Minute (1835)"
+                - "Wood's Despatch (1854)"
+                - "Hunter Commission, Sadler Commission"
+                - "National Education Movement"
+              key_concepts: ["Macaulay's Minute", "Wood's Despatch", "Education Policy"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2019 - Education policy"]
+
+            - part: 149
+              title: "Governor Generals & Viceroys - Part 1"
+              subtopics:
+                - "Warren Hastings to Lord Cornwallis"
+                - "Lord Wellesley - Subsidiary Alliance"
+                - "Lord William Bentinck - reforms"
+                - "Lord Dalhousie - modernization & annexation"
+              key_concepts: ["Governor Generals", "Cornwallis", "Bentinck", "Dalhousie"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2020 - Governor Generals"]
+
+            - part: 150
+              title: "Governor Generals & Viceroys - Part 2"
+              subtopics:
+                - "Lord Canning - first Viceroy"
+                - "Lord Curzon - partition of Bengal, reforms"
+                - "Lord Irwin - Gandhi-Irwin Pact"
+                - "Lord Mountbatten - last Viceroy, independence"
+              key_concepts: ["Viceroys", "Curzon", "Irwin", "Mountbatten"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2018 - Viceroys"]
+
+        # --- World History Links ---
+        - name: "World History Connections"
+          topics:
+            - part: 151
+              title: "French Revolution & Its Impact on India"
+              subtopics:
+                - "Causes & course of French Revolution"
+                - "Impact on Indian political thought"
+                - "Liberty, Equality, Fraternity - influence on Indian leaders"
+                - "Napoleon & his relevance"
+              key_concepts: ["French Revolution", "Liberty Equality Fraternity", "Napoleon"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2017 - World history"]
+
+            - part: 152
+              title: "Industrial Revolution & Its Impact"
+              subtopics:
+                - "Industrial Revolution in Britain"
+                - "Impact on Indian economy - deindustrialization"
+                - "Rise of capitalism & colonialism"
+                - "Working class movements"
+              key_concepts: ["Industrial Revolution", "Capitalism", "Colonialism"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2019 - Industrial Revolution"]
+
+            - part: 153
+              title: "American Revolution & Russian Revolution"
+              subtopics:
+                - "American War of Independence - key ideas"
+                - "Russian Revolution 1917 - impact on India"
+                - "Communist & Socialist movements in India"
+                - "Cold War context"
+              key_concepts: ["American Revolution", "Russian Revolution", "Socialism in India"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2018 - World revolutions"]
+
+            - part: 154
+              title: "World Wars & Impact on India"
+              subtopics:
+                - "World War I - India's contribution & impact"
+                - "World War II - impact on freedom movement"
+                - "INA, Quit India in WWII context"
+                - "Post-war decolonization wave"
+              key_concepts: ["WWI Impact", "WWII Impact", "Decolonization", "Indian Soldiers"]
+              exam_focus: "BOTH"
+              previous_year_refs: ["UPSC 2020 - World Wars"]
+
+        # --- Modern History Themes ---
+        - name: "Modern History - Thematic Studies"
+          topics:
+            - part: 155
+              title: "Trade Union & Labour Movement"
+              subtopics:
+                - "Rise of trade unions in India"
+                - "AITUC formation (1920)"
+                - "Major strikes - Bombay Textile, Railway"
+                - "Communist Party of India & labour politics"
+              key_concepts: ["AITUC", "Trade Unions", "Labour Movement", "CPI"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2018 - Labour movement"]
+
+            - part: 156
+              title: "Left Movement & Socialist Ideas"
+              subtopics:
+                - "Congress Socialist Party - Jayaprakash Narayan"
+                - "Communist movement in India"
+                - "Socialist ideas influence on Congress"
+                - "Telangana & Tebhaga movements"
+              key_concepts: ["CSP", "Communist Movement", "Telangana", "Tebhaga"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2019 - Left movements"]
+
+            - part: 157
+              title: "Role of Business Community in Freedom Struggle"
+              subtopics:
+                - "Indian business houses & nationalism"
+                - "Bombay Plan (1944)"
+                - "Swadeshi entrepreneurship"
+                - "Funding of Congress & national movement"
+              key_concepts: ["Bombay Plan", "Swadeshi Business", "Economic Nationalism"]
+              exam_focus: "MAINS"
+              previous_year_refs: ["UPSC 2017 - Business & nationalism"]
+
+        # --- Art & Culture (Modern) ---
+        - name: "Modern Art & Culture"
+          topics:
+            - part: 158
+              title: "Modern Indian Art"
+              subtopics:
+                - "Bengal School of Art - Abanindranath Tagore"
+                - "Raja Ravi Varma - pioneer of modern art"
+                - "Rabindranath Tagore's artistic contributions"
+                - "Progressive Artists Group"
+              key_concepts: ["Bengal School", "Raja Ravi Varma", "Tagore", "Modern Indian Art"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2020 - Modern art"]
+
+            - part: 159
+              title: "Modern Indian Literature & Cinema"
+              subtopics:
+                - "Bengali Renaissance literature"
+                - "Hindi literature - Premchand, Bharatendu"
+                - "Birth of Indian cinema - Dadasaheb Phalke"
+                - "Literature's role in social reform"
+              key_concepts: ["Premchand", "Dadasaheb Phalke", "Bengali Renaissance", "Hindi Literature"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: ["UPSC 2019 - Modern literature"]
+
+        # --- Modern History Revision ---
+        - name: "Modern History - Comprehensive Revision"
+          topics:
+            - part: 160
+              title: "Modern History Complete Timeline"
+              subtopics:
+                - "1498-1947 complete chronological chart"
+                - "Parallel timelines - British India & national movement"
+                - "Key turning points in modern Indian history"
+                - "Date-wise event listing for quick revision"
+              key_concepts: ["Timeline", "Chronology", "Key Dates", "Turning Points"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 161
+              title: "Governor Generals & Viceroys Complete Revision"
+              subtopics:
+                - "Complete list with key reforms/events"
+                - "Mnemonics for remembering sequence"
+                - "Acts passed under each Governor General"
+                - "Quick comparison chart"
+              key_concepts: ["GG Revision", "Viceroy Chart", "Mnemonics"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 162
+              title: "National Movement Phase-wise Revision"
+              subtopics:
+                - "Moderate phase key points"
+                - "Extremist phase key points"
+                - "Gandhian phase - all movements summary"
+                - "Revolutionary movement summary"
+              key_concepts: ["Movement Phases", "Gandhi Movements", "Revolutionary Summary"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 163
+              title: "Constitutional Development Complete Revision"
+              subtopics:
+                - "All Acts from 1773 to 1947 - one chart"
+                - "Key provisions of each act"
+                - "Evolution of governance structure"
+                - "Commissions & committees chart"
+              key_concepts: ["Acts Chart", "Constitutional Evolution", "Commissions"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 164
+              title: "Social Reform Movements Complete Revision"
+              subtopics:
+                - "All reform movements & leaders chart"
+                - "Region-wise reform movements"
+                - "Comparison of reform approaches"
+                - "Impact on modern India"
+              key_concepts: ["Reform Revision", "Leaders Chart", "Comparison"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 165
+              title: "Modern History PYQ Analysis - Part 1"
+              subtopics:
+                - "UPSC Prelims PYQs on Modern History (2015-2020)"
+                - "Most frequently tested topics"
+                - "MCQ patterns & solving techniques"
+                - "Common traps in Modern History MCQs"
+              key_concepts: ["PYQ Analysis", "MCQ Patterns", "Solving Techniques"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 166
+              title: "Modern History PYQ Analysis - Part 2"
+              subtopics:
+                - "UPSC Prelims & Mains PYQs (2021-2025)"
+                - "State PSC Modern History PYQs"
+                - "Mains answer writing techniques"
+                - "Important essay topics from Modern History"
+              key_concepts: ["PYQ Analysis", "Mains Writing", "Essay Topics"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 167
+              title: "Freedom Struggle Maps & Geography"
+              subtopics:
+                - "Map of major revolt centers (1857)"
+                - "INC session venues on map"
+                - "Gandhian movement locations"
+                - "Important cities in freedom struggle"
+              key_concepts: ["Map Practice", "Freedom Struggle Geography"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 168
+              title: "Modern History Comparative Studies"
+              subtopics:
+                - "Moderates vs Extremists comparison"
+                - "NCM vs CDM vs QIM comparison"
+                - "Land revenue systems comparison"
+                - "Reform movements comparison chart"
+              key_concepts: ["Comparative Analysis", "Movement Comparison"]
+              exam_focus: "MAINS"
+              previous_year_refs: []
+
+        # --- Grand Revision ---
+        - name: "Complete History - Grand Revision"
+          topics:
+            - part: 169
+              title: "Ancient History - 50 Must-Know Facts"
+              subtopics:
+                - "Top 50 facts for Prelims from Ancient History"
+                - "Quick flashcard revision"
+                - "Most repeated PYQ topics"
+                - "Last-minute revision strategy"
+              key_concepts: ["Quick Revision", "Must-Know Facts", "Flashcards"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 170
+              title: "Medieval History - 50 Must-Know Facts"
+              subtopics:
+                - "Top 50 facts for Prelims from Medieval History"
+                - "Quick flashcard revision"
+                - "Dynasty-wise quick summary"
+                - "Architecture & culture one-page revision"
+              key_concepts: ["Quick Revision", "Must-Know Facts", "Flashcards"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 171
+              title: "Modern History - 50 Must-Know Facts"
+              subtopics:
+                - "Top 50 facts for Prelims from Modern History"
+                - "Freedom movement quick timeline"
+                - "Acts & reforms one-page chart"
+                - "Leaders & their contributions"
+              key_concepts: ["Quick Revision", "Must-Know Facts", "Flashcards"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 172
+              title: "Art & Culture Complete Revision"
+              subtopics:
+                - "Architecture styles - Ancient to Modern"
+                - "Painting schools complete chart"
+                - "Music & dance forms"
+                - "UNESCO Heritage Sites in India"
+              key_concepts: ["Art Culture Revision", "Architecture", "Heritage Sites"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 173
+              title: "History for Mains - GS Paper 1 Preparation"
+              subtopics:
+                - "Important Mains topics from History"
+                - "Answer writing framework for History"
+                - "Analytical vs descriptive approach"
+                - "Model answer practice"
+              key_concepts: ["Mains Preparation", "Answer Writing", "GS1 History"]
+              exam_focus: "MAINS"
+              previous_year_refs: []
+
+            - part: 174
+              title: "History for Mains - Essay & Ethics Links"
+              subtopics:
+                - "History themes for Essay paper"
+                - "Historical examples for Ethics (GS4)"
+                - "Connecting history to current affairs"
+                - "Multidimensional answer approach"
+              key_concepts: ["Essay Preparation", "Ethics Links", "Current Affairs Connection"]
+              exam_focus: "MAINS"
+              previous_year_refs: []
+
+            - part: 175
+              title: "State PSC Special - Regional History Part 1"
+              subtopics:
+                - "North India regional history highlights"
+                - "South India regional history highlights"
+                - "State-specific important topics"
+                - "State PSC pattern analysis"
+              key_concepts: ["State PSC", "Regional History", "State-specific Topics"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 176
+              title: "State PSC Special - Regional History Part 2"
+              subtopics:
+                - "East India regional history highlights"
+                - "West India regional history highlights"
+                - "Central India & Northeast history"
+                - "State PSC PYQ patterns"
+              key_concepts: ["State PSC", "Regional History", "Northeast History"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 177
+              title: "Complete Mnemonics & Memory Techniques"
+              subtopics:
+                - "Mnemonics for all dynasties & dates"
+                - "Memory palace technique for history"
+                - "Association techniques for events"
+                - "Quick recall strategies for exam hall"
+              key_concepts: ["Mnemonics", "Memory Techniques", "Exam Strategy"]
+              exam_focus: "BOTH"
+              previous_year_refs: []
+
+            - part: 178
+              title: "Mock Test Discussion - Ancient & Medieval"
+              subtopics:
+                - "50 MCQs discussion - Ancient History"
+                - "50 MCQs discussion - Medieval History"
+                - "Explanation of correct answers"
+                - "Elimination technique practice"
+              key_concepts: ["Mock Test", "MCQ Practice", "Test Discussion"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 179
+              title: "Mock Test Discussion - Modern History"
+              subtopics:
+                - "50 MCQs discussion - Modern History"
+                - "50 MCQs discussion - Art & Culture"
+                - "Full-length test analysis"
+                - "Time management strategy"
+              key_concepts: ["Mock Test", "MCQ Practice", "Time Management"]
+              exam_focus: "PRELIMS"
+              previous_year_refs: []
+
+            - part: 180
+              title: "Complete History Course - Final Summary & Exam Tips"
+              subtopics:
+                - "180-part course summary in one class"
+                - "Top 20 most important topics for UPSC 2026"
+                - "Last-minute exam tips & strategy"
+                - "Motivation & next steps for aspirants"
+              key_concepts: ["Final Summary", "Exam Tips", "Strategy", "Motivation"]
+              exam_focus: "BOTH"
+              previous_year_refs: []

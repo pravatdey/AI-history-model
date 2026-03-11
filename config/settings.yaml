@@ -1,0 +1,205 @@
+# AI History Video Generator - Main Configuration
+
+# Application Settings
+app:
+  name: "AI History Video Generator"
+  version: "1.0.0"
+  debug: false
+  log_level: "INFO"
+  type: "history_course"
+
+# Video Settings
+video:
+  duration_target: 20          # Target 20 minutes per class
+  duration_min: 15             # Minimum video duration in minutes
+  duration_max: 25             # Maximum video duration in minutes
+  resolution:
+    width: 1280
+    height: 720
+  fps: 30
+  format: "mp4"
+  codec: "libx264"
+  bitrate: "1500k"
+  preset: "ultrafast"
+  threads: 8
+
+# Language Configuration - Hinglish (Hindi-English mix)
+languages:
+  default: "hi"
+  supported:
+    - code: "hi"
+      name: "Hinglish"
+      tts_voice: "hi-IN-MadhurNeural"
+      tts_rate: "-5%"                    # Slightly slower for educational content
+      tts_pitch: "+0Hz"
+
+# LLM Configuration
+llm:
+  provider: "groq"
+
+  # Groq settings (free cloud LLM)
+  groq:
+    api_key: ""                          # Set via environment variable GROQ_API_KEY
+    model: "llama-3.3-70b-versatile"
+    temperature: 0.6                     # Slightly lower for factual accuracy
+    max_tokens: 6000                     # Higher for 20-min scripts
+
+  # Ollama settings (local LLM fallback)
+  ollama:
+    host: "http://localhost:11434"
+    model: "llama2"
+    temperature: 0.6
+    max_tokens: 6000
+
+# Script Generation
+script:
+  words_per_minute: 140                  # Speaking pace for educational content
+  target_word_count: 2800                # ~20 minutes at 140 WPM
+  max_key_points_per_section: 4
+  lesson_structure:
+    intro_pct: 0.10                      # 10% intro (~2 min)
+    main_content_pct: 0.75              # 75% main content (~15 min)
+    exam_corner_pct: 0.10               # 10% exam corner (~2 min)
+    summary_pct: 0.05                    # 5% summary (~1 min)
+
+# Text-to-Speech Configuration
+tts:
+  provider: "edge"
+  output_format: "mp3"
+
+  edge:
+    rate: "-5%"                          # Slower for clarity
+    pitch: "+0Hz"
+    volume: "+0%"
+
+  audio:
+    normalize: true
+    noise_reduction: false
+    target_loudness: -14                 # LUFS for YouTube
+    clarity_boost: true
+    compressor: true
+
+# Avatar Configuration
+avatar:
+  provider: "sadtalker"
+
+  default_image: "news_anchor.png"       # Reuse current affairs avatar
+
+  sadtalker:
+    preprocess: "crop"
+    still_mode: false
+    use_enhancer: false
+    batch_size: 2
+    expression_scale: 1.0
+
+  wav2lip:
+    resize_factor: 1
+    nosmooth: false
+    pads: [0, 10, 0, 0]
+
+# Video Composition
+composition:
+  background:
+    type: "solid"
+    color: "#0e1220"
+
+  presentation_slides:
+    enabled: true
+    content_start_x_pct: 0.33
+    transition_duration: 0.5
+    max_key_points: 4
+    show_subject_badge: true
+    show_terms_as_badges: true
+    bullet_style: "numbered"
+
+  avatar:
+    position: "left"
+    scale: 0.55
+    x_offset: -50
+    y_offset: 80
+
+  text:
+    headline:
+      enabled: false                     # No headline for history lessons
+    ticker:
+      enabled: false                     # No ticker for history lessons
+
+  intro:
+    enabled: true
+    duration: 4
+    text: "History Class"
+    animation: "fade"
+
+  outro:
+    enabled: true
+    duration: 5
+    text: "See you in the next class!"
+    animation: "fade"
+
+  music:
+    enabled: true
+    file: "background_calm.mp3"
+    volume: 0.08                         # Quieter for educational content
+
+# Thumbnail Settings
+thumbnail:
+  width: 1280
+  height: 720
+  format: "png"
+  style: "history_class"
+
+  text:
+    enabled: true
+    max_chars: 60
+    font: "Arial-Bold"
+    size: 72
+    color: "#ffffff"
+    stroke_color: "#000000"
+    stroke_width: 3
+
+  effects:
+    gradient_overlay: true
+    vignette: true
+
+# YouTube Settings
+youtube:
+  upload:
+    privacy_status: "public"
+    category_id: "27"                    # Education
+    default_language: "hi"
+    made_for_kids: false
+
+# Syllabus Configuration
+syllabus:
+  path: "config/syllabus.yaml"
+  target_parts: 180
+  target_months: 6
+
+# Scheduling
+schedule:
+  enabled: true
+  time: "14:00"                          # 2:00 PM IST (different from current affairs)
+  timezone: "Asia/Kolkata"
+  days:
+    - 0  # Monday
+    - 1  # Tuesday
+    - 2  # Wednesday
+    - 3  # Thursday
+    - 4  # Friday
+    - 5  # Saturday
+    - 6  # Sunday
+
+# Database
+database:
+  type: "sqlite"
+  path: "data/history_tracker.db"
+
+# Output Paths
+paths:
+  output: "output"
+  audio: "output/audio"
+  videos: "output/videos"
+  thumbnails: "output/thumbnails"
+  notes: "output/notes"
+  temp: "output/temp"
+  logs: "logs"

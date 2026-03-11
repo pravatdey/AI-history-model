@@ -1,0 +1,47 @@
+# Environment & Secrets
+.env
+*.env
+config/youtube_token.json
+config/client_secrets.json
+
+# Output files (generated at runtime)
+output/audio/
+output/videos/
+output/thumbnails/
+output/notes/
+output/temp/
+
+# Database
+data/*.db
+
+# Logs
+logs/*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backups
+*_old_backup*
+*_backup*

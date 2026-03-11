@@ -1,0 +1,184 @@
+name: Daily History Video Generator
+
+on:
+  # Run daily at 8:00 AM IST (2:30 AM UTC)
+  schedule:
+    - cron: '30 2 * * *'
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Upload to YouTube'
+        required: false
+        default: true
+        type: boolean
+      test_mode:
+        description: 'Test mode (upload as private)'
+        required: false
+        default: false
+        type: boolean
+      part_number:
+        description: 'Specific part number to generate (leave empty for next pending)'
+        required: false
+        default: ''
+        type: string
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  generate-history-video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libsndfile1 imagemagick
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create necessary directories
+        run: |
+          mkdir -p output/audio output/videos output/thumbnails output/notes output/temp
+          mkdir -p data logs config assets/avatars
+
+      - name: Setup environment file
+        run: |
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > .env
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
+          echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env
+
+      - name: Setup YouTube credentials
+        if: ${{ github.event.inputs.upload != 'false' }}
+        env:
+          YOUTUBE_TOKEN_SECRET: ${{ secrets.YOUTUBE_TOKEN }}
+          YOUTUBE_CLIENT_SECRETS_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
+        run: |
+          python3 -c "
+          import os, json, sys, base64
+
+          def parse_secret(name, value):
+              if not value:
+                  print(f'ERROR: {name} secret is empty')
+                  sys.exit(1)
+              try:
+                  return json.loads(value)
+              except json.JSONDecodeError:
+                  pass
+              try:
+                  return json.loads(base64.b64decode(value).decode('utf-8'))
+              except Exception:
+                  pass
+              try:
+                  return json.loads(value.strip().strip(\"'\"))
+              except Exception as e:
+                  print(f'ERROR: Cannot parse {name} as JSON or base64-JSON: {e}')
+                  sys.exit(1)
+
+          token_data = parse_secret('YOUTUBE_TOKEN', os.environ['YOUTUBE_TOKEN_SECRET'])
+          with open('config/youtube_token.json', 'w') as f:
+              json.dump(token_data, f, indent=2)
+          required = ['token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+          missing = [k for k in required if not token_data.get(k)]
+          if missing:
+              print(f'WARNING: youtube_token.json is missing fields: {missing}')
+          else:
+              print('YouTube token written and validated successfully')
+
+          secrets_val = os.environ.get('YOUTUBE_CLIENT_SECRETS_SECRET', '')
+          if secrets_val:
+              secrets_data = parse_secret('YOUTUBE_CLIENT_SECRETS', secrets_val)
+              with open('config/client_secrets.json', 'w') as f:
+                  json.dump(secrets_data, f, indent=2)
+              print('Client secrets written successfully')
+          "
+        continue-on-error: false
+
+      - name: Restore database from cache
+        uses: actions/cache@v4
+        with:
+          path: data/history_tracker.db
+          key: history-db-${{ github.run_number }}
+          restore-keys: |
+            history-db-
+
+      - name: Run history video generation pipeline
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          PART_ARG=""
+          if [ -n "${{ github.event.inputs.part_number }}" ]; then
+            PART_ARG="--part ${{ github.event.inputs.part_number }}"
+          fi
+
+          python main.py \
+            ${{ github.event.inputs.upload == 'false' && '--no-upload' || '' }} \
+            ${{ github.event.inputs.test_mode == 'true' && '--test' || '' }} \
+            $PART_ARG
+
+      - name: Save database to cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data/history_tracker.db
+          key: history-db-${{ github.run_number }}
+
+      - name: Upload video artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: history-video-${{ github.run_number }}
+          path: |
+            output/videos/*_final.mp4
+            output/thumbnails/*.png
+            output/notes/*.pdf
+            output/*_script.txt
+            logs/*.log
+          retention-days: 7
+
+      - name: Show progress
+        if: always()
+        run: |
+          python -c "
+          from main import HistoryPipeline
+          try:
+              p = HistoryPipeline()
+              p.syllabus_mgr.print_progress()
+          except Exception as e:
+              print(f'Could not show progress: {e}')
+          "
+
+      - name: Send Telegram notification on success
+        if: success() && env.TELEGRAM_BOT_TOKEN != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="History video generated successfully! Run #${{ github.run_number }}"
+
+      - name: Send Telegram notification on failure
+        if: failure() && env.TELEGRAM_BOT_TOKEN != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="History video generation failed! Run #${{ github.run_number }}"
