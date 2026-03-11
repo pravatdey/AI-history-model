@@ -609,6 +609,20 @@ class AvatarGenerator:
             # Paste position for viseme sprites
             paste_pos = sprite_sheet.get_paste_position() if use_viseme else None
 
+            # ── Pre-compute blink schedule (deterministic) ─────────────────
+            import random as _rng
+            _blink_rng = _rng.Random(42)
+            blink_times = []
+            bt = 2.0 + _blink_rng.uniform(0, 2)
+            while bt < duration:
+                blink_times.append(bt)
+                bt += _blink_rng.uniform(3.0, 6.0)  # blink every 3-6s
+
+            # Eye region for blink (from mouth_region or fallback)
+            img_h_px, img_w_px = base_array.shape[:2]
+            eye_y_pct = 0.25  # eyes at ~25% of full-body image height
+            eye_region_h = int(img_h_px * 0.035)
+
             # ── Frame generator ──────────────────────────────────────────────
             def make_frame(t):
                 frame_idx = min(int(t * fps), len(amplitudes) - 1)
@@ -617,6 +631,52 @@ class AvatarGenerator:
                 # Subtle breathing brightness variation
                 brightness = 1.0 + math.sin(t * 0.9) * 0.010 + math.cos(t * 1.7) * 0.005
                 frame_array = np.clip(base_array * brightness, 0, 255).astype(np.uint8)
+
+                # ── Body animation: breathing sway ───────────────────────
+                sway_y = math.sin(t * 0.7) * 3.0   # ±3 pixels vertical
+                sway_x = math.cos(t * 0.5) * 1.5   # ±1.5 pixels horizontal
+                if abs(sway_y) > 0.5 or abs(sway_x) > 0.5:
+                    try:
+                        from scipy.ndimage import shift as nd_shift
+                        frame_array = nd_shift(
+                            frame_array, (sway_y, sway_x, 0),
+                            mode='nearest', order=1
+                        ).astype(np.uint8)
+                    except ImportError:
+                        pass  # scipy not available, skip sway
+
+                # ── Body animation: head tilt synced with speech ─────────
+                tilt_angle = math.cos(t * 2.1) * amplitude * 1.2  # ±1.2° max
+                if abs(tilt_angle) > 0.1:
+                    frame_pil = Image.fromarray(frame_array)
+                    frame_pil = frame_pil.rotate(
+                        tilt_angle, expand=False, resample=Image.BILINEAR,
+                        center=(img_w_px // 2, int(img_h_px * 0.30))  # rotate around neck
+                    )
+                    frame_array = np.array(frame_pil)
+
+                # ── Body animation: blink ────────────────────────────────
+                blink_alpha = 0.0
+                for bt in blink_times:
+                    dt = t - bt
+                    if 0.0 <= dt < 0.18:
+                        # Blink curve: quick close (0-0.08s) then open (0.08-0.18s)
+                        if dt < 0.08:
+                            blink_alpha = dt / 0.08
+                        else:
+                            blink_alpha = 1.0 - (dt - 0.08) / 0.10
+                        blink_alpha = max(0.0, min(1.0, blink_alpha))
+                        break
+
+                if blink_alpha > 0.05:
+                    # Darken eye region to simulate eyelid closing
+                    ey_start = max(0, int(img_h_px * eye_y_pct) - eye_region_h)
+                    ey_end = min(img_h_px, int(img_h_px * eye_y_pct) + eye_region_h)
+                    eye_band = frame_array[ey_start:ey_end].copy()
+                    # Blend with skin-tone color to simulate lid
+                    lid_color = np.array([200, 170, 140], dtype=np.float32)
+                    blended = eye_band * (1.0 - blink_alpha * 0.8) + lid_color * (blink_alpha * 0.8)
+                    frame_array[ey_start:ey_end] = np.clip(blended, 0, 255).astype(np.uint8)
 
                 if not use_viseme:
                     return frame_array
@@ -822,13 +882,14 @@ class AvatarGenerator:
             pass
 
         # ── 3. Default avatar known proportions ───────────────────────────────
-        # news_anchor.png (512 x 640): mouth centre ≈ 50 % x, 49 % y after resize.
+        # news_anchor.png (512 x 910): mouth centre ≈ 50 % x, 35 % y after resize.
+        # (Head is in the upper portion of the taller full-body image.)
         if avatar_image_path and Path(avatar_image_path).name == 'news_anchor.png':
             return {
                 'cx': img_w // 2,
-                'cy': int(img_h * 0.49),
+                'cy': int(img_h * 0.35),
                 'w': int(img_w * 0.15),
-                'h': int(img_h * 0.05),
+                'h': int(img_h * 0.04),
                 'method': 'default_avatar_known',
             }
 
@@ -909,7 +970,9 @@ class AvatarGenerator:
             )
 
     def _create_default_avatar(self) -> Optional[str]:
-        """Create a professional, human-like AI avatar image with gradient shading."""
+        """Create a professional, full-body AI avatar image with gradient shading.
+        Proportioned to fill the left zone (≈422×720) without black gaps.
+        """
         try:
             from PIL import Image, ImageDraw, ImageFont, ImageFilter
             import numpy as np
@@ -919,8 +982,9 @@ class AvatarGenerator:
             avatar_path.parent.mkdir(parents=True, exist_ok=True)
 
             # Draw at 2x resolution for anti-aliasing, downscale at the end
+            # Taller aspect ratio (≈9:16) to fill the full left zone height
             S = 2  # supersampling factor
-            width, height = 512 * S, 640 * S
+            width, height = 512 * S, 910 * S
             center_x = width // 2
 
             img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
@@ -929,7 +993,7 @@ class AvatarGenerator:
             # ── Background gradient (dark navy, subtle radial glow) ──────
             bg_arr = np.zeros((height, width, 4), dtype=np.uint8)
             Y, X = np.ogrid[:height, :width]
-            dist = np.sqrt(((X - center_x) / (width * 0.6)) ** 2 + ((Y - height * 0.35) / (height * 0.7)) ** 2)
+            dist = np.sqrt(((X - center_x) / (width * 0.6)) ** 2 + ((Y - height * 0.30) / (height * 0.7)) ** 2)
             dist = np.clip(dist, 0, 1)
             # Core color: (18, 22, 40) -> edge: (10, 12, 24)
             for c, (c0, c1) in enumerate([(18, 10), (22, 12), (40, 24)]):
@@ -983,6 +1047,7 @@ class AvatarGenerator:
 
             # ── BODY / SUIT ──────────────────────────────────────────────
             suit_top = 760
+            belt_y = suit_top + 520  # Belt/waist line
 
             # Shoulders (curved) - using polygon with many points for smoothness
             shoulder_pts = []
@@ -1004,8 +1069,8 @@ class AvatarGenerator:
             # Left lapel with gradient
             lapel_pts_l = [
                 (center_x - 60, suit_top + 30),
-                (center_x - 120, height),
-                (center_x - 30, height),
+                (center_x - 120, belt_y - 30),
+                (center_x - 30, belt_y - 30),
                 (center_x - 5, suit_top + 140),
             ]
             draw.polygon(lapel_pts_l, fill=lapel_dark)
@@ -1013,8 +1078,8 @@ class AvatarGenerator:
             # Right lapel
             lapel_pts_r = [
                 (center_x + 60, suit_top + 30),
-                (center_x + 120, height),
-                (center_x + 30, height),
+                (center_x + 120, belt_y - 30),
+                (center_x + 30, belt_y - 30),
                 (center_x + 5, suit_top + 140),
             ]
             draw.polygon(lapel_pts_r, fill=lapel_dark)
@@ -1039,24 +1104,95 @@ class AvatarGenerator:
                 (center_x, suit_top + 50),
             ], fill=(220, 222, 230))
 
-            # Tie with gradient shading
+            # Tie with gradient shading (extends to belt)
             tie_w = 22
             draw.polygon([
                 (center_x - tie_w, suit_top + 55),
                 (center_x + tie_w, suit_top + 55),
-                (center_x + int(tie_w * 0.7), height - 180),
-                (center_x - int(tie_w * 0.7), height - 180),
+                (center_x + int(tie_w * 0.7), belt_y - 40),
+                (center_x - int(tie_w * 0.7), belt_y - 40),
             ], fill=tie_red)
             # Tie center highlight
             draw.polygon([
                 (center_x - 4, suit_top + 70),
                 (center_x + 4, suit_top + 70),
-                (center_x + 3, height - 200),
-                (center_x - 3, height - 200),
+                (center_x + 3, belt_y - 60),
+                (center_x - 3, belt_y - 60),
             ], fill=(210, 55, 60))
             # Tie knot
             draw_gradient_ellipse(img, (center_x - 28, suit_top + 35, center_x + 28, suit_top + 80),
                                   (200, 45, 50), tie_dark, alpha=255)
+
+            # ── BELT ────────────────────────────────────────────────────
+            belt_h = 28
+            draw.rectangle([center_x - 280, belt_y - belt_h // 2,
+                            center_x + 280, belt_y + belt_h // 2],
+                           fill=(30, 30, 35))
+            # Belt buckle
+            buckle_w, buckle_h = 36, 30
+            draw_gradient_ellipse(img, (center_x - buckle_w // 2, belt_y - buckle_h // 2,
+                                        center_x + buckle_w // 2, belt_y + buckle_h // 2),
+                                  (180, 160, 80), (120, 100, 50), alpha=255)
+
+            # ── LOWER BODY (suit pants visible above desk) ─────────────
+            pants_dark = (25, 50, 130)
+            pants_light = (35, 65, 150)
+            draw_gradient_rect(img, (center_x - 280, belt_y + belt_h // 2,
+                                     center_x + 280, height),
+                               pants_light, pants_dark, alpha=200)
+
+            # ── HANDS / GESTURE (right hand raised, pointing) ──────────
+            hand_color = skin_light
+            hand_shadow = skin_mid
+            # Right hand - open palm, slightly raised in speaking gesture
+            rh_x = center_x + 220
+            rh_y = suit_top + 280
+            # Forearm (sleeve)
+            draw.polygon([
+                (center_x + 300, suit_top + 150),
+                (rh_x + 40, rh_y - 20),
+                (rh_x + 10, rh_y + 10),
+                (center_x + 270, suit_top + 180),
+            ], fill=suit_dark)
+            # Palm
+            draw_gradient_ellipse(img, (rh_x - 28, rh_y - 30, rh_x + 28, rh_y + 35),
+                                  hand_color, hand_shadow, alpha=255)
+            # Fingers (simplified - 4 fingers splayed)
+            for fi, (fx_off, fy_off, flen) in enumerate([
+                (-18, -30, 45), (-6, -35, 50), (6, -35, 50), (18, -30, 45)
+            ]):
+                fx = rh_x + fx_off
+                fy = rh_y + fy_off
+                draw.rounded_rectangle([fx - 7, fy - flen, fx + 7, fy],
+                                       radius=6, fill=hand_color)
+            # Thumb
+            draw.rounded_rectangle([rh_x - 38, rh_y - 15, rh_x - 22, rh_y + 20],
+                                   radius=6, fill=hand_color)
+
+            # Left hand resting (lower, partially visible)
+            lh_x = center_x - 200
+            lh_y = suit_top + 380
+            draw.polygon([
+                (center_x - 280, suit_top + 250),
+                (lh_x + 30, lh_y - 10),
+                (lh_x + 10, lh_y + 30),
+                (center_x - 260, suit_top + 290),
+            ], fill=suit_dark)
+            draw_gradient_ellipse(img, (lh_x - 25, lh_y - 20, lh_x + 30, lh_y + 25),
+                                  hand_color, hand_shadow, alpha=255)
+
+            # ── DESK / PODIUM (bottom edge) ────────────────────────────
+            desk_top = height - 200
+            desk_color_top = (45, 40, 55)
+            desk_color_bottom = (30, 25, 38)
+            draw_gradient_rect(img, (0, desk_top, width, height),
+                               desk_color_top, desk_color_bottom, alpha=230)
+            # Desk edge highlight
+            draw.line([(0, desk_top), (width, desk_top)],
+                      fill=(70, 65, 85), width=4)
+            # Desk surface sheen
+            draw_gradient_rect(img, (0, desk_top, width, desk_top + 30),
+                               (60, 55, 75), desk_color_top, alpha=80)
 
             # ── NECK ─────────────────────────────────────────────────────
             neck_top = 680
@@ -1228,7 +1364,12 @@ class AvatarGenerator:
             self._default_mouth_region = {
                 'cx': center_x // S, 'cy': mouth_cy // S,
                 'w': 160 // S, 'h': 85 // S,
-                'method': 'default_avatar_known'
+                'method': 'default_avatar_known',
+                # Store eye region for blink animation
+                '_eye_y': (head_cy - 28) // S,
+                '_eye_spacing': 65 // S,
+                '_eye_rx': 42 // S,
+                '_eye_ry': 22 // S,
             }
 
             # Subtle closed lips hint (neutral expression)
@@ -1237,23 +1378,23 @@ class AvatarGenerator:
             draw.arc([center_x - 40, mouth_cy - 12, center_x + 40, mouth_cy + 8],
                      start=195, end=345, fill=(195, 120, 110, 160), width=3)
 
-            # ── MICROPHONE ───────────────────────────────────────────────
-            mic_x = center_x - 190
-            mic_y = suit_top + 100
+            # ── MICROPHONE (on desk) ────────────────────────────────────
+            mic_x = center_x - 160
+            mic_y = desk_top - 40
 
-            # Mic arm
-            draw.line([(mic_x + 15, mic_y + 25), (mic_x - 20, suit_top + 200)],
-                      fill=(55, 60, 70, 200), width=4)
+            # Mic stand base on desk
+            draw.rounded_rectangle([mic_x - 30, desk_top - 15, mic_x + 30, desk_top + 5],
+                                   radius=4, fill=(50, 55, 65, 220))
+            # Mic arm (angled up)
+            draw.line([(mic_x, desk_top - 10), (mic_x - 25, mic_y + 20)],
+                      fill=(55, 60, 70, 200), width=5)
             # Mic body (rounded rect)
-            draw.rounded_rectangle([mic_x - 12, mic_y - 20, mic_x + 12, mic_y + 20],
+            draw.rounded_rectangle([mic_x - 37, mic_y - 20, mic_x - 13, mic_y + 20],
                                    radius=8, fill=(60, 65, 75, 230))
             # Mic grill lines
             for gy in range(mic_y - 14, mic_y + 14, 5):
-                draw.line([(mic_x - 8, gy), (mic_x + 8, gy)],
+                draw.line([(mic_x - 33, gy), (mic_x - 17, gy)],
                           fill=(80, 85, 95, 180), width=1)
-            # Mic highlight
-            draw.line([(mic_x - 10, mic_y - 18), (mic_x - 10, mic_y + 18)],
-                      fill=(100, 105, 120, 120), width=2)
 
             # ── AI BADGE ─────────────────────────────────────────────────
             badge_x = center_x + 155
@@ -1286,7 +1427,7 @@ class AvatarGenerator:
                                   suit_light, suit_main, alpha=50)
 
             # ── Downscale 2x → 1x with LANCZOS anti-aliasing ────────────
-            final_w, final_h = 512, 640
+            final_w, final_h = 512, 910
             img = img.resize((final_w, final_h), Image.LANCZOS)
 
             # Convert to RGB for saving
@@ -1294,7 +1435,7 @@ class AvatarGenerator:
             bg_rgb.paste(img, (0, 0), img)
 
             bg_rgb.save(str(avatar_path), quality=95)
-            logger.info(f"Created professional avatar: {avatar_path}")
+            logger.info(f"Created full-body professional avatar: {avatar_path} ({final_w}x{final_h})")
 
             return str(avatar_path)
 

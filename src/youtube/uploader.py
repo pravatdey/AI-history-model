@@ -1,15 +1,16 @@
 """
-YouTube Uploader - Uploads videos to YouTube with metadata
+YouTube Uploader - Uploads videos to YouTube with metadata, comments, and playlists
 """
 
 import os
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 import http.client
 import httplib2
 
+import yaml
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
 
@@ -53,7 +54,8 @@ class YouTubeUploader:
     def __init__(
         self,
         auth: YouTubeAuth = None,
-        metadata_generator: MetadataGenerator = None
+        metadata_generator: MetadataGenerator = None,
+        youtube_config_path: str = "config/youtube_config.yaml"
     ):
         """
         Initialize YouTube uploader.
@@ -61,12 +63,27 @@ class YouTubeUploader:
         Args:
             auth: YouTubeAuth instance (creates new if not provided)
             metadata_generator: MetadataGenerator instance
+            youtube_config_path: Path to YouTube configuration (for playlists etc.)
         """
         self.auth = auth or YouTubeAuth()
         self.metadata_gen = metadata_generator or MetadataGenerator()
         self.drive_uploader = DriveUploader(auth=self.auth)
 
+        # Load playlist config
+        self._playlist_cache: Dict[str, str] = {}  # title -> playlist_id
+        self._playlist_config = self._load_playlist_config(youtube_config_path)
+
         logger.info("YouTubeUploader initialized")
+
+    def _load_playlist_config(self, config_path: str) -> Dict[str, Any]:
+        """Load playlist configuration from youtube_config.yaml."""
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+            return config.get("playlists", {})
+        except Exception as e:
+            logger.warning(f"Failed to load playlist config: {e}")
+            return {}
 
     def upload(
         self,
@@ -266,6 +283,226 @@ class YouTubeUploader:
                 logger.error(f"Thumbnail upload failed: {e}")
             return False
 
+    def _post_pdf_comment(
+        self,
+        youtube,
+        video_id: str,
+        pdf_link: str = None,
+        pdf_filename: str = None
+    ) -> bool:
+        """Post a comment with PDF download link on the video.
+
+        Channel-owner comments are auto-highlighted on YouTube.
+        The owner can then manually pin it from YouTube Studio.
+
+        Args:
+            youtube: Authenticated YouTube API service
+            video_id: YouTube video ID
+            pdf_link: Google Drive shareable link for the PDF
+            pdf_filename: Local filename of the PDF (fallback)
+
+        Returns:
+            True if comment was posted successfully
+        """
+        if not pdf_link and not pdf_filename:
+            return False
+
+        try:
+            # Build comment text
+            lines = [
+                "📄 FREE PDF STUDY NOTES 📄",
+                "",
+                "Download the complete study notes for this class:",
+                "✅ Detailed coverage with background & context",
+                "✅ Important Terms & Dates",
+                "✅ Previous Year Questions",
+                "✅ Mnemonics & Memory Aids",
+                "✅ Practice Questions",
+                "",
+            ]
+
+            if pdf_link:
+                lines.append(f"🔗 Download PDF: {pdf_link}")
+            else:
+                lines.append(f"📁 PDF file: {pdf_filename}")
+                lines.append("(Link will be updated shortly)")
+
+            lines.extend([
+                "",
+                "Like & subscribe for daily history classes! 🔔",
+            ])
+
+            comment_text = "\n".join(lines)
+
+            youtube.commentThreads().insert(
+                part="snippet",
+                body={
+                    "snippet": {
+                        "videoId": video_id,
+                        "topLevelComment": {
+                            "snippet": {
+                                "textOriginal": comment_text
+                            }
+                        }
+                    }
+                }
+            ).execute()
+
+            logger.info(f"PDF comment posted on video: {video_id}")
+            return True
+
+        except HttpError as e:
+            if e.resp.status == 403:
+                logger.warning(
+                    "Comment posting failed - insufficient permissions. "
+                    "You may need to re-authenticate with broader scopes."
+                )
+            else:
+                logger.warning(f"Failed to post PDF comment: {e}")
+            return False
+        except Exception as e:
+            logger.warning(f"Failed to post PDF comment: {e}")
+            return False
+
+    def _find_playlist_by_title(self, youtube, title: str) -> Optional[str]:
+        """Look up a playlist ID by title from the channel's playlists.
+
+        Results are cached to avoid repeated API calls.
+
+        Args:
+            youtube: Authenticated YouTube API service
+            title: Playlist title to search for
+
+        Returns:
+            Playlist ID if found, None otherwise
+        """
+        # Check cache first
+        if title in self._playlist_cache:
+            return self._playlist_cache[title]
+
+        try:
+            # Fetch all playlists (paginated)
+            next_page = None
+            while True:
+                request = youtube.playlists().list(
+                    part="snippet",
+                    mine=True,
+                    maxResults=50,
+                    pageToken=next_page
+                )
+                response = request.execute()
+
+                for item in response.get("items", []):
+                    pl_title = item["snippet"]["title"]
+                    pl_id = item["id"]
+                    self._playlist_cache[pl_title] = pl_id
+
+                    if pl_title == title:
+                        return pl_id
+
+                next_page = response.get("nextPageToken")
+                if not next_page:
+                    break
+
+            logger.info(f"Playlist not found: '{title}' (available: {list(self._playlist_cache.keys())})")
+            return None
+
+        except HttpError as e:
+            if e.resp.status == 403:
+                logger.warning(
+                    "Playlist lookup failed - insufficient permissions. "
+                    "You may need to re-authenticate with broader scopes."
+                )
+            else:
+                logger.warning(f"Failed to look up playlists: {e}")
+            return None
+        except Exception as e:
+            logger.warning(f"Failed to look up playlists: {e}")
+            return None
+
+    def _add_video_to_playlist(self, youtube, video_id: str, playlist_id: str) -> bool:
+        """Add a video to a specific playlist.
+
+        Args:
+            youtube: Authenticated YouTube API service
+            video_id: YouTube video ID
+            playlist_id: YouTube playlist ID
+
+        Returns:
+            True if video was added successfully
+        """
+        try:
+            youtube.playlistItems().insert(
+                part="snippet",
+                body={
+                    "snippet": {
+                        "playlistId": playlist_id,
+                        "resourceId": {
+                            "kind": "youtube#video",
+                            "videoId": video_id
+                        }
+                    }
+                }
+            ).execute()
+
+            logger.info(f"Video {video_id} added to playlist {playlist_id}")
+            return True
+
+        except HttpError as e:
+            if e.resp.status == 409:
+                logger.info(f"Video {video_id} already in playlist {playlist_id}")
+                return True  # Already added, not an error
+            logger.warning(f"Failed to add video to playlist: {e}")
+            return False
+        except Exception as e:
+            logger.warning(f"Failed to add video to playlist: {e}")
+            return False
+
+    def add_to_playlists(self, youtube, video_id: str, era: str = None) -> Dict[str, bool]:
+        """Add video to the general playlist and era-specific playlist.
+
+        Reads playlist title mappings from youtube_config.yaml.
+        Looks up existing playlists by title (user creates them manually).
+
+        Args:
+            youtube: Authenticated YouTube API service
+            video_id: YouTube video ID
+            era: Era string ("ancient", "medieval", "modern") for era-specific playlist
+
+        Returns:
+            Dict mapping playlist name to success status
+        """
+        results = {}
+        mappings = self._playlist_config.get("mappings", {})
+
+        if not mappings:
+            logger.info("No playlist mappings configured, skipping playlist addition")
+            return results
+
+        # Always add to "general" playlist
+        general_title = mappings.get("general")
+        if general_title:
+            playlist_id = self._find_playlist_by_title(youtube, general_title)
+            if playlist_id:
+                results["general"] = self._add_video_to_playlist(youtube, video_id, playlist_id)
+            else:
+                logger.info(f"General playlist '{general_title}' not found on channel - create it on YouTube first")
+                results["general"] = False
+
+        # Add to era-specific playlist
+        if era:
+            era_key = era.lower().strip()
+            era_title = mappings.get(era_key)
+            if era_title:
+                playlist_id = self._find_playlist_by_title(youtube, era_title)
+                if playlist_id:
+                    results[era_key] = self._add_video_to_playlist(youtube, video_id, playlist_id)
+                else:
+                    logger.info(f"Era playlist '{era_title}' not found on channel - create it on YouTube first")
+                    results[era_key] = False
+
+        return results
+
     def upload_with_metadata(
         self,
         video_path: str,
@@ -323,7 +560,7 @@ class YouTubeUploader:
             topic_metadata=topic_metadata
         )
 
-        return self.upload(
+        upload_result = self.upload(
             video_path=video_path,
             title=metadata["title"],
             description=metadata["description"],
@@ -333,6 +570,28 @@ class YouTubeUploader:
             thumbnail_path=thumbnail_path,
             made_for_kids=metadata["made_for_kids"]
         )
+
+        # Post-upload actions (comment + playlists) — only if upload succeeded
+        if upload_result.success and upload_result.video_id:
+            youtube = self.auth.get_service()
+            if youtube:
+                # Post PDF comment
+                if pdf_link or pdf_filename:
+                    self._post_pdf_comment(
+                        youtube, upload_result.video_id,
+                        pdf_link=pdf_link, pdf_filename=pdf_filename
+                    )
+
+                # Add to playlists
+                if self._playlist_config.get("auto_add", True):
+                    era = (topic_metadata or {}).get("era")
+                    playlist_results = self.add_to_playlists(
+                        youtube, upload_result.video_id, era=era
+                    )
+                    if playlist_results:
+                        logger.info(f"Playlist results: {playlist_results}")
+
+        return upload_result
 
     def get_upload_status(self, video_id: str) -> Dict[str, Any]:
         """

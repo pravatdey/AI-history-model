@@ -279,7 +279,7 @@ class MetadataGenerator:
             lines.append("🔗 Download PDF Study Notes (Click the link below):")
             lines.append(pdf_link)
         else:
-            lines.append("🔗 PDF Study Notes: Check the pinned comment for download link")
+            lines.append("🔗 PDF Study Notes: Available in the comments below!")
 
         lines.extend([
             "",
