@@ -11,7 +11,7 @@ from typing import Optional, List, Dict, Any
 
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, Boolean, ForeignKey, JSON
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, make_transient
 
 from src.utils.logger import get_logger
 
@@ -162,6 +162,8 @@ class Database:
             session.add(topic)
             session.commit()
             session.refresh(topic)
+            session.expunge(topic)
+            make_transient(topic)
             logger.debug(f"Added topic: Part {topic.part_number} - {topic.title}")
             return topic
         except Exception as e:
@@ -175,7 +177,11 @@ class Database:
         """Get a topic by its part number."""
         session = self.get_session()
         try:
-            return session.query(Topic).filter(Topic.part_number == part_number).first()
+            topic = session.query(Topic).filter(Topic.part_number == part_number).first()
+            if topic:
+                session.expunge(topic)
+                make_transient(topic)
+            return topic
         finally:
             session.close()
 
@@ -183,9 +189,13 @@ class Database:
         """Get the next pending topic in sequence."""
         session = self.get_session()
         try:
-            return session.query(Topic).filter(
+            topic = session.query(Topic).filter(
                 Topic.status == 'pending'
             ).order_by(Topic.part_number).first()
+            if topic:
+                session.expunge(topic)
+                make_transient(topic)
+            return topic
         finally:
             session.close()
 
@@ -196,7 +206,11 @@ class Database:
             query = session.query(Topic)
             if status:
                 query = query.filter(Topic.status == status)
-            return query.order_by(Topic.part_number).all()
+            topics = query.order_by(Topic.part_number).all()
+            for t in topics:
+                session.expunge(t)
+                make_transient(t)
+            return topics
         finally:
             session.close()
 
