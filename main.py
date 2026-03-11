@@ -178,7 +178,7 @@ class HistoryPipeline:
             next_topic = self.syllabus_mgr.get_topic_by_part(topic.part_number + 1)
 
             # Log step start
-            self.db.log_step_start(topic.id, "pipeline")
+            self.db.log_step_start(topic.id, topic.part_number, "pipeline")
 
             results["steps"]["topic"] = {
                 "part_number": topic.part_number,
@@ -201,7 +201,7 @@ class HistoryPipeline:
 
             # === Step 2: Generate lesson script ===
             self.logger.info("Step 2: Generating lesson script...")
-            self.db.log_step_start(topic.id, "script")
+            self.db.log_step_start(topic.id, topic.part_number, "script")
 
             script = self.script_writer.generate_lesson_script(
                 topic=topic,
@@ -237,7 +237,7 @@ class HistoryPipeline:
 
             # === Step 3: Generate audio (TTS) ===
             self.logger.info("Step 3: Generating audio (TTS)...")
-            self.db.log_step_start(topic.id, "audio")
+            self.db.log_step_start(topic.id, topic.part_number, "audio")
 
             audio_result = await self.tts_manager.generate_lesson_audio(
                 script_text=script.get_script_for_tts(),
@@ -270,7 +270,7 @@ class HistoryPipeline:
 
             # === Step 4: Generate avatar video ===
             self.logger.info("Step 4: Generating avatar video...")
-            self.db.log_step_start(topic.id, "avatar")
+            self.db.log_step_start(topic.id, topic.part_number, "avatar")
 
             avatar_path = str(self.video_dir / f"part_{topic.part_number:03d}_avatar.mp4")
 
@@ -300,7 +300,7 @@ class HistoryPipeline:
 
             # === Step 5: Compose final video ===
             self.logger.info("Step 5: Composing final video...")
-            self.db.log_step_start(topic.id, "video")
+            self.db.log_step_start(topic.id, topic.part_number, "video")
 
             final_video_path = str(
                 self.video_dir / f"part_{topic.part_number:03d}_final.mp4"
@@ -367,7 +367,7 @@ class HistoryPipeline:
             # === Step 7: Upload to YouTube (if enabled) ===
             if upload:
                 self.logger.info("Step 7: Uploading to YouTube...")
-                self.db.log_step_start(topic.id, "upload")
+                self.db.log_step_start(topic.id, topic.part_number, "upload")
 
                 upload_result = self.youtube_uploader.upload_with_metadata(
                     video_path=final_video_path,
