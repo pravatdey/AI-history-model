@@ -148,7 +148,8 @@ class HistoryScriptWriter:
         # Script settings
         script_config = self.config.get('script', {})
         self.wpm = script_config.get('words_per_minute', self.WORDS_PER_MINUTE)
-        self.target_word_count = script_config.get('target_word_count', 2800)
+        self.target_word_count = script_config.get('target_word_count', 2100)
+        self.min_word_count = script_config.get('min_word_count', 1800)
 
         # Initialize topic planner
         self.planner = TopicPlanner(
@@ -235,35 +236,70 @@ class HistoryScriptWriter:
         return script
 
     def _generate_raw_script(self, plan: LessonPlan) -> str:
-        """Generate raw script text via LLM."""
-        prompt = HistoryPromptTemplates.get_lesson_script_prompt(
-            part_number=plan.part_number,
-            total_parts=180,
-            title=plan.title,
-            era=plan.era,
-            section=plan.section,
-            subtopics=plan.subtopics,
-            key_concepts=plan.key_concepts,
-            exam_focus=plan.exam_focus,
-            previous_year_refs=plan.previous_year_refs,
-            word_count=plan.total_word_budget,
-            previous_topic_title=plan.previous_topic_title,
-            next_topic_title=plan.next_topic_title,
-            needs_recap=plan.needs_recap,
-        )
+        """Generate raw script text via LLM with retry if too short."""
+        max_retries = 2
+        best_script = ""
+        best_word_count = 0
 
-        try:
-            raw_script = self.llm.generate(
-                prompt=prompt,
-                system_prompt=self.system_prompt,
-                max_tokens=plan.total_word_budget * 2,
-                temperature=0.6
+        for attempt in range(max_retries + 1):
+            if attempt == 0:
+                word_count_target = plan.total_word_budget
+            else:
+                # Ask for more words on retry, compensating for LLM under-delivery
+                word_count_target = int(plan.total_word_budget * 1.3)
+                logger.info(
+                    f"Retry {attempt}: LLM generated only {best_word_count} words, "
+                    f"requesting {word_count_target} words this time"
+                )
+
+            prompt = HistoryPromptTemplates.get_lesson_script_prompt(
+                part_number=plan.part_number,
+                total_parts=180,
+                title=plan.title,
+                era=plan.era,
+                section=plan.section,
+                subtopics=plan.subtopics,
+                key_concepts=plan.key_concepts,
+                exam_focus=plan.exam_focus,
+                previous_year_refs=plan.previous_year_refs,
+                word_count=word_count_target,
+                previous_topic_title=plan.previous_topic_title,
+                next_topic_title=plan.next_topic_title,
+                needs_recap=plan.needs_recap,
             )
-            logger.info(f"Raw script generated: {len(raw_script.split())} words")
-            return raw_script
-        except Exception as e:
-            logger.error(f"Failed to generate script: {e}")
-            raise
+
+            try:
+                raw_script = self.llm.generate(
+                    prompt=prompt,
+                    system_prompt=self.system_prompt,
+                    max_tokens=max(8000, word_count_target * 3),
+                    temperature=0.6
+                )
+                current_word_count = len(raw_script.split())
+                logger.info(f"Attempt {attempt + 1}: Generated {current_word_count} words")
+
+                # Keep the best (longest) result
+                if current_word_count > best_word_count:
+                    best_script = raw_script
+                    best_word_count = current_word_count
+
+                # If we meet minimum threshold, stop retrying
+                if best_word_count >= self.min_word_count:
+                    break
+
+            except Exception as e:
+                logger.error(f"Failed to generate script (attempt {attempt + 1}): {e}")
+                if attempt == max_retries:
+                    raise
+
+        if best_word_count < self.min_word_count:
+            logger.warning(
+                f"Script word count ({best_word_count}) is below minimum ({self.min_word_count}). "
+                f"Video may be shorter than {self.min_word_count / self.wpm:.0f} minutes."
+            )
+
+        logger.info(f"Raw script finalized: {best_word_count} words")
+        return best_script
 
     def _parse_script_into_segments(self, raw_script: str, topic: Topic) -> List[ScriptSegment]:
         """Parse raw LLM output into structured segments."""

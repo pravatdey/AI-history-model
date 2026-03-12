@@ -80,7 +80,7 @@ class TopicPlanner:
     """Plans lesson structure and content allocation for each topic."""
 
     # Default configuration
-    DEFAULT_DURATION_MINUTES = 20
+    DEFAULT_DURATION_MINUTES = 15
     DEFAULT_WPM = 140                    # Words per minute for educational content
 
     # Lesson structure percentages

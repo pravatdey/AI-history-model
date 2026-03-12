@@ -491,7 +491,9 @@ class YouTubeUploader:
 
         # Add to era-specific playlist
         if era:
-            era_key = era.lower().strip()
+            # Normalize era name: "Ancient History" -> "ancient", "Medieval History" -> "medieval"
+            era_key = era.lower().strip().replace(" history", "").replace(" ", "")
+            logger.info(f"Looking up era playlist: era='{era}' -> era_key='{era_key}'")
             era_title = mappings.get(era_key)
             if era_title:
                 playlist_id = self._find_playlist_by_title(youtube, era_title)

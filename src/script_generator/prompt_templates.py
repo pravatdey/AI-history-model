@@ -74,7 +74,7 @@ RECAP SECTION (~140 words, ~1 minute):
         else:
             next_preview = 'This is the final class! Give a motivational closing message.'
 
-        prompt = f"""Generate a complete {word_count}-word video lesson script in Hinglish for a history class.
+        prompt = f"""Generate a DETAILED and COMPREHENSIVE {word_count}-word video lesson script in Hinglish for a history class. The script MUST be at least {word_count} words long - this is very important for video duration.
 
 === LESSON DETAILS ===
 Part Number: {part_number} of {total_parts}
@@ -101,17 +101,19 @@ INTRODUCTION (~{int(word_count * 0.10)} words, ~2 minutes):
 - Briefly tell what we'll cover in this class
 - Mention exam relevance ({exam_focus})
 
-MAIN CONTENT (~{int(word_count * 0.75)} words, ~15 minutes):
+MAIN CONTENT (~{int(word_count * 0.75)} words - THIS IS THE LONGEST SECTION, write it in full detail):
 - Cover ALL subtopics listed above in order
-- For each subtopic:
-  * Start with context/background
-  * Give key facts with dates and names
-  * Explain cause and effect
-  * Highlight UPSC-relevant points
-  * Use examples and analogies
+- For EACH subtopic, write AT LEAST {int(word_count * 0.75 / max(len(subtopics), 3))} words:
+  * Start with detailed context/background (why this matters)
+  * Give ALL key facts with dates, names, and places
+  * Explain cause and effect in detail with chain of events
+  * Highlight UPSC-relevant points with exam tips
+  * Use 2-3 examples, analogies, or real-world connections
+  * Include interesting historical anecdotes and stories
+  * Mention how this connects to other topics
 - Maintain chronological flow
 - Use transition phrases between subtopics
-- Include interesting historical anecdotes
+- DO NOT rush through any subtopic - each needs thorough coverage
 
 EXAM CORNER (~{int(word_count * 0.10)} words, ~2 minutes):
 - Discuss previous year questions related to this topic
@@ -138,7 +140,7 @@ Within MAIN_CONTENT, mark subtopic transitions:
 [SUBTOPIC: subtopic title]
 
 === IMPORTANT RULES ===
-1. Write exactly ~{word_count} words (±10%)
+1. CRITICAL: You MUST write AT LEAST {word_count} words. This is a HARD MINIMUM. The script should be {word_count}-{int(word_count * 1.15)} words long. A script shorter than {word_count} words is UNACCEPTABLE and will be rejected.
 2. Use Hinglish throughout - Hindi narration with English terms
 3. Every important fact should have a date or name attached
 4. Don't use markdown formatting (no *, #, etc.)
@@ -146,6 +148,8 @@ Within MAIN_CONTENT, mark subtopic transitions:
 6. Don't use emojis or special characters
 7. Write numbers as digits (e.g., "1526" not "fifteen twenty-six")
 8. Pronunciation guide for difficult names in brackets: "Chandragupta (CHUN-dra-GUP-ta)"
+9. Go DEEP into each subtopic - don't just mention facts, EXPLAIN them with context, background, cause-effect chains, and exam relevance
+10. For each subtopic, include at least 2-3 detailed examples, analogies, or anecdotes to make content rich and engaging
 """
         return prompt
 

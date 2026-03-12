@@ -10,9 +10,9 @@ app:
 
 # Video Settings
 video:
-  duration_target: 20          # Target 20 minutes per class
-  duration_min: 15             # Minimum video duration in minutes
-  duration_max: 25             # Maximum video duration in minutes
+  duration_target: 15          # Target 15 minutes per class
+  duration_min: 13             # Minimum video duration in minutes
+  duration_max: 20             # Maximum video duration in minutes
   resolution:
     width: 1280
     height: 720
@@ -42,25 +42,26 @@ llm:
     api_key: ""                          # Set via environment variable GROQ_API_KEY
     model: "llama-3.3-70b-versatile"
     temperature: 0.6                     # Slightly lower for factual accuracy
-    max_tokens: 6000                     # Higher for 20-min scripts
+    max_tokens: 8000                     # Higher for 15-min scripts (LLMs need token headroom)
 
   # Ollama settings (local LLM fallback)
   ollama:
     host: "http://localhost:11434"
     model: "llama2"
     temperature: 0.6
-    max_tokens: 6000
+    max_tokens: 8000
 
 # Script Generation
 script:
   words_per_minute: 140                  # Speaking pace for educational content
-  target_word_count: 2800                # ~20 minutes at 140 WPM
+  target_word_count: 2100                # ~15 minutes at 140 WPM
+  min_word_count: 1800                   # Minimum words (~13 min) - retry if below this
   max_key_points_per_section: 4
   lesson_structure:
-    intro_pct: 0.10                      # 10% intro (~2 min)
-    main_content_pct: 0.75              # 75% main content (~15 min)
-    exam_corner_pct: 0.10               # 10% exam corner (~2 min)
-    summary_pct: 0.05                    # 5% summary (~1 min)
+    intro_pct: 0.10                      # 10% intro (~1.5 min)
+    main_content_pct: 0.75              # 75% main content (~11 min)
+    exam_corner_pct: 0.10               # 10% exam corner (~1.5 min)
+    summary_pct: 0.05                    # 5% summary (~0.5 min)
 
 # Text-to-Speech Configuration
 tts:
