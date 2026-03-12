@@ -125,7 +125,7 @@ class PresentationSlideGenerator:
 
     def __init__(
         self,
-        content_start_x_pct: float = 0.33,
+        content_start_x_pct: float = 0.30,
         max_key_points: int = 4,
         show_subject_badge: bool = True,
         show_terms_as_badges: bool = True,
@@ -133,8 +133,8 @@ class PresentationSlideGenerator:
     ):
         """
         Args:
-            content_start_x_pct: Fraction of width where slide content starts
-                                 (left of this is avatar territory).
+            content_start_x_pct: Fraction of width where right-side content starts
+                                 (left of this is reserved for avatar overlay).
             max_key_points: Max bullet points to show (4 fits best with larger fonts).
             show_subject_badge: Show prominent subject badge bar on right panel.
             show_terms_as_badges: Show terms as pill badges instead of a table.
@@ -274,46 +274,51 @@ class PresentationSlideGenerator:
         slide: SlideContent,
         video_size: Tuple[int, int]
     ) -> Image.Image:
-        """Create a single presentation slide as a PIL image (full-screen layout)."""
+        """
+        Create a presentation slide with split layout:
+        - Header bar spans full width at top
+        - Left ~30% reserved for avatar (gradient bg only)
+        - Right ~70% has subject badge + key points + terms
+        """
         width, height = video_size
         colors = self.THEMES.get(slide.subtitle, self.THEMES['Current Affairs'])
 
         img = Image.new('RGB', (width, height), (0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        # Full-screen: content starts from left edge (content_x=0)
-        content_x = 0
+        # Split: right content starts at content_start_x_pct of width
+        content_x = int(width * self.content_start_x_pct)
         header_h = 90
-        footer_h = 55
-        footer_y = height - footer_h
+        bottom_margin = 20  # small bottom padding instead of footer
 
-        # 1. Header bar (full width)
-        self._draw_header(draw, img, slide, width, header_h, colors, content_x)
+        # 1. Full-screen gradient background (covers both avatar zone + right panel)
+        self._draw_right_panel_gradient(draw, 0, header_h, height, width, colors)
 
-        # 2. Full-screen gradient background
-        self._draw_right_panel_gradient(draw, content_x, header_h, footer_y, width, colors)
+        # 2. Header bar (full width)
+        self._draw_header(draw, img, slide, width, header_h, colors, 0)
 
-        # 3. Subject badge bar (full width)
-        y_cursor = header_h + 8
+        # 3. Subject badge bar + "KEY POINTS" label on right panel
+        y_cursor = header_h + 10
         if self.show_subject_badge:
             y_cursor = self._draw_subject_badge_bar(draw, slide, content_x, width, y_cursor, colors)
 
-        # 4. Numbered key points (full width, with card backgrounds)
+        # 4. Bold headline title on right panel (below badge bar)
+        y_cursor = self._draw_slide_title(draw, slide, content_x, width, y_cursor, colors)
+
+        # 5. Numbered key points (right panel only)
         y_cursor = self._draw_key_points_enhanced(draw, slide, content_x, width, y_cursor, colors)
 
-        # 5. Terms as pill badges (or fallback to table)
-        if y_cursor < footer_y - 60:
+        # 6. Terms as pill badges (right panel, if space remains)
+        max_y = height - bottom_margin
+        if y_cursor < max_y - 60:
             if slide.important_terms and self.show_terms_as_badges:
-                y_cursor = self._draw_terms_as_badges(draw, slide, content_x, width, y_cursor, footer_y, colors)
+                y_cursor = self._draw_terms_as_badges(draw, slide, content_x, width, y_cursor, max_y, colors)
             elif slide.table_data:
                 y_cursor = self._draw_table(draw, slide.table_data, y_cursor,
                                             content_x + 20, width - 30, colors)
             elif slide.important_terms:
                 y_cursor = self._draw_terms(draw, slide.important_terms, y_cursor,
                                             content_x + 20, width - 30, colors)
-
-        # 6. Footer bar (full width)
-        self._draw_footer(draw, slide, width, height, footer_h, colors, content_x)
 
         return img
 
@@ -397,33 +402,56 @@ class PresentationSlideGenerator:
         )
 
     def _draw_subject_badge_bar(self, draw, slide, content_x, width, y_start, colors):
-        """Draw a prominent subject category banner across the right panel."""
-        bar_height = 42
-        bar_x_start = content_x + 5
-        bar_x_end = width - 15
-        bar_y_end = y_start + bar_height
+        """Draw subject badge pill + sub-labels (KEY POINTS / TODAY'S ANALYSIS) on right panel."""
+        padding = 15
 
+        # Subject pill badge (e.g. "ECONOMY", "ANCIENT HISTORY")
+        subject_text = slide.subtitle.upper()
+        badge_font = self.fonts['heading']
+        badge_bbox = draw.textbbox((0, 0), subject_text, font=badge_font)
+        badge_w = badge_bbox[2] - badge_bbox[0] + 28
+        badge_h = badge_bbox[3] - badge_bbox[1] + 14
+
+        badge_x = content_x + padding
+        badge_y = y_start
         badge_bg = colors.get('badge_bg', colors['primary'])
         draw.rounded_rectangle(
-            [bar_x_start, y_start, bar_x_end, bar_y_end],
-            radius=8, fill=badge_bg
+            [badge_x, badge_y, badge_x + badge_w, badge_y + badge_h],
+            radius=6, fill=badge_bg
         )
-
-        subject_text = slide.subtitle.upper()
         draw.text(
-            (bar_x_start + 18, y_start + 6),
+            (badge_x + 14, badge_y + 5),
             subject_text,
-            fill=(255, 255, 255), font=self.fonts['heading']
+            fill=(255, 255, 255), font=badge_font
         )
 
+        # Sub-labels to the right of badge: "KEY POINTS" separator "TODAY'S ANALYSIS"
+        sub_x = badge_x + badge_w + 18
+        sub_y = badge_y + (badge_h - 18) // 2
+        sub_text = "KEY POINTS"
+        draw.text((sub_x, sub_y), sub_text,
+                  fill=(180, 190, 210), font=self.fonts['small'])
+
+        sep_bbox = draw.textbbox((0, 0), sub_text, font=self.fonts['small'])
+        sep_x = sub_x + (sep_bbox[2] - sep_bbox[0]) + 10
+
+        # Dot separator
+        draw.text((sep_x, sub_y), "\u00b7", fill=(120, 130, 150), font=self.fonts['small'])
+
+        dot_bbox = draw.textbbox((0, 0), "\u00b7", font=self.fonts['small'])
+        analysis_x = sep_x + (dot_bbox[2] - dot_bbox[0]) + 10
+        draw.text((analysis_x, sub_y), "TODAY'S ANALYSIS",
+                  fill=(180, 190, 210), font=self.fonts['small'])
+
+        # Exam tag on the right edge
         if slide.exam_tag:
             tag_color = self.EXAM_TAG_COLORS.get(slide.exam_tag, (100, 100, 100))
             tag_text = slide.exam_tag
             tag_bbox = draw.textbbox((0, 0), tag_text, font=self.fonts['tag'])
             tag_w = tag_bbox[2] - tag_bbox[0] + 16
             tag_h = tag_bbox[3] - tag_bbox[1] + 8
-            tag_x = bar_x_end - tag_w - 10
-            tag_y = y_start + (bar_height - tag_h) // 2
+            tag_x = width - tag_w - 20
+            tag_y = badge_y + (badge_h - tag_h) // 2
             draw.rounded_rectangle(
                 [tag_x, tag_y, tag_x + tag_w, tag_y + tag_h],
                 radius=4, fill=tag_color
@@ -431,7 +459,53 @@ class PresentationSlideGenerator:
             draw.text((tag_x + 8, tag_y + 3), tag_text,
                       fill=(255, 255, 255), font=self.fonts['tag'])
 
-        return bar_y_end + 10
+        return badge_y + badge_h + 12
+
+    def _draw_slide_title(self, draw, slide, content_x, width, y_start, colors):
+        """Draw bold headline title on the right panel, with key words highlighted."""
+        padding = 15
+        right_margin = 30
+        max_title_w = width - content_x - padding - right_margin
+
+        title_text = slide.title
+        if not title_text:
+            return y_start
+
+        # Wrap title to fit within right panel
+        wrapped = self._wrap_text(title_text, max_title_w, self.fonts['title'], draw, max_lines=3)
+        lines = wrapped.split('\n')
+
+        title_x = content_x + padding
+        line_h = 48  # line height for 42px title font
+
+        for line in lines:
+            # Draw each word: highlight important words (capitalized / key terms) in accent
+            words = line.split()
+            x_cursor = title_x
+            for word in words:
+                # Highlight words that are capitalized (proper nouns) or special
+                is_highlight = (
+                    len(word) > 1 and word[0].isupper() and not word.isupper()
+                    and word.lower() not in ('the', 'of', 'in', 'for', 'and', 'to', 'a', 'an',
+                                              'is', 'it', 'its', 'with', 'from', 'by', 'on', 'at',
+                                              'what', 'how', 'why', 'when', 'where')
+                )
+                color = colors['accent'] if is_highlight else (235, 240, 250)
+                font = self.fonts['title']
+
+                draw.text((x_cursor, y_start), word, fill=color, font=font)
+                word_bbox = draw.textbbox((0, 0), word + " ", font=font)
+                x_cursor += word_bbox[2] - word_bbox[0]
+
+            y_start += line_h
+
+        # Thin accent line below title
+        draw.line(
+            [(title_x, y_start + 2), (title_x + min(max_title_w, 300), y_start + 2)],
+            fill=colors['accent'], width=2
+        )
+
+        return y_start + 12
 
     def _draw_key_points_enhanced(self, draw, slide, content_x, width, y_start, colors):
         """Draw numbered key points with card backgrounds and large readable text."""
@@ -441,14 +515,6 @@ class PresentationSlideGenerator:
 
         if not slide.bullet_points:
             return y_start
-
-        label_x = content_x + padding
-        draw.text((label_x, y_start), "KEY POINTS",
-                  fill=colors['accent'], font=self.fonts['section_label'])
-        y_start += 28
-        draw.line([(label_x, y_start), (label_x + 120, y_start)],
-                  fill=colors['accent'], width=2)
-        y_start += 12
 
         circle_size = 30  # diameter of number circle
         text_x_offset = circle_size + 18  # gap after circle

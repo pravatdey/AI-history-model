@@ -468,18 +468,21 @@ class VideoComposer:
         position = avatar_config.get("position", "left")
 
         if position == "overlay_left":
-            # Avatar overlays on top of full-screen slides, bottom-left aligned
-            avatar_scale = avatar_config.get("scale", 0.55)
+            # Avatar occupies the left zone (matched to content_start_x_pct)
+            content_start_pct = slides_config.get("content_start_x_pct", 0.30)
+            avatar_zone_w = int(width * content_start_pct)
+
+            avatar_scale = avatar_config.get("scale", 0.65)
             avatar_height = int(height * avatar_scale)
             avatar_clip = avatar_clip.resize(height=avatar_height)
 
-            # Cap width to prevent covering too much slide content
-            max_avatar_width = int(width * 0.30)
-            if avatar_clip.w > max_avatar_width:
-                avatar_clip = avatar_clip.resize(width=max_avatar_width)
+            # Cap width to stay within the avatar zone
+            if avatar_clip.w > avatar_zone_w:
+                avatar_clip = avatar_clip.resize(width=avatar_zone_w)
 
-            x_offset = avatar_config.get("x_offset", 20)
-            x_pos = x_offset
+            # Center horizontally in the avatar zone, bottom-aligned
+            x_offset = avatar_config.get("x_offset", 10)
+            x_pos = max(x_offset, (avatar_zone_w - avatar_clip.w) // 2)
             y_pos = height - avatar_clip.h  # Bottom-aligned
 
         elif position == "left":

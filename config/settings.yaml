@@ -107,7 +107,7 @@ composition:
 
   presentation_slides:
     enabled: true
-    content_start_x_pct: 0.0            # Full-screen slides (no left zone reserved)
+    content_start_x_pct: 0.30           # Right panel starts at 30% - left 30% reserved for avatar
     transition_duration: 0.5
     max_key_points: 4
     show_subject_badge: true
@@ -115,9 +115,9 @@ composition:
     bullet_style: "numbered"
 
   avatar:
-    position: "overlay_left"             # Avatar overlays on top of slides, bottom-left, no background
-    scale: 0.55                          # Avatar height as fraction of video height
-    x_offset: 20                         # Pixels from left edge
+    position: "overlay_left"             # Avatar overlays on left zone of slides
+    scale: 0.65                          # Avatar height as fraction of video height (taller to fill left zone)
+    x_offset: 10                         # Pixels from left edge
     transparent_bg: true                 # Remove avatar background, show only the person
 
   text:
