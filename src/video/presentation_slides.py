@@ -274,36 +274,34 @@ class PresentationSlideGenerator:
         slide: SlideContent,
         video_size: Tuple[int, int]
     ) -> Image.Image:
-        """Create a single presentation slide as a PIL image."""
+        """Create a single presentation slide as a PIL image (full-screen layout)."""
         width, height = video_size
         colors = self.THEMES.get(slide.subtitle, self.THEMES['Current Affairs'])
 
-        img = Image.new('RGB', (width, height), (14, 18, 28))
+        img = Image.new('RGB', (width, height), (0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        content_x = int(width * self.content_start_x_pct)
+        # Full-screen: content starts from left edge (content_x=0)
+        content_x = 0
         header_h = 90
         footer_h = 55
         footer_y = height - footer_h
 
-        # 1. Header bar (right panel only, so avatar doesn't overlap)
+        # 1. Header bar (full width)
         self._draw_header(draw, img, slide, width, header_h, colors, content_x)
 
-        # 2. Right panel gradient background (subject-tinted)
+        # 2. Full-screen gradient background
         self._draw_right_panel_gradient(draw, content_x, header_h, footer_y, width, colors)
 
-        # 3. Left avatar area decoration
-        self._draw_avatar_area(draw, content_x, header_h, footer_y, colors)
-
-        # 4. Subject badge bar (prominent subject label)
+        # 3. Subject badge bar (full width)
         y_cursor = header_h + 8
         if self.show_subject_badge:
             y_cursor = self._draw_subject_badge_bar(draw, slide, content_x, width, y_cursor, colors)
 
-        # 5. Numbered key points (larger, with card backgrounds)
+        # 4. Numbered key points (full width, with card backgrounds)
         y_cursor = self._draw_key_points_enhanced(draw, slide, content_x, width, y_cursor, colors)
 
-        # 6. Terms as pill badges (or fallback to table)
+        # 5. Terms as pill badges (or fallback to table)
         if y_cursor < footer_y - 60:
             if slide.important_terms and self.show_terms_as_badges:
                 y_cursor = self._draw_terms_as_badges(draw, slide, content_x, width, y_cursor, footer_y, colors)
@@ -314,7 +312,7 @@ class PresentationSlideGenerator:
                 y_cursor = self._draw_terms(draw, slide.important_terms, y_cursor,
                                             content_x + 20, width - 30, colors)
 
-        # 7. Footer bar (right panel only)
+        # 6. Footer bar (full width)
         self._draw_footer(draw, slide, width, height, footer_h, colors, content_x)
 
         return img
@@ -389,7 +387,9 @@ class PresentationSlideGenerator:
             )
 
     def _draw_avatar_area(self, draw, content_x, header_h, footer_y, colors):
-        """Draw minimal decoration for the left avatar zone."""
+        """Draw minimal decoration for the left avatar zone (legacy, no-op for full-screen)."""
+        if content_x <= 0:
+            return  # Full-screen mode — no avatar area decoration
         accent_x = content_x - 6
         draw.line(
             [(accent_x, header_h + 10), (accent_x, footer_y - 10)],

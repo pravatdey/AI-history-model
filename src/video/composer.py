@@ -467,19 +467,30 @@ class VideoComposer:
         slides_config = self.composition_config.get("presentation_slides", {})
         position = avatar_config.get("position", "left")
 
-        if position == "left":
-            # Auto-fill left zone: avatar spans x=0 to content start, bottom-aligned
+        if position == "overlay_left":
+            # Avatar overlays on top of full-screen slides, bottom-left aligned
+            avatar_scale = avatar_config.get("scale", 0.55)
+            avatar_height = int(height * avatar_scale)
+            avatar_clip = avatar_clip.resize(height=avatar_height)
+
+            # Cap width to prevent covering too much slide content
+            max_avatar_width = int(width * 0.30)
+            if avatar_clip.w > max_avatar_width:
+                avatar_clip = avatar_clip.resize(width=max_avatar_width)
+
+            x_offset = avatar_config.get("x_offset", 20)
+            x_pos = x_offset
+            y_pos = height - avatar_clip.h  # Bottom-aligned
+
+        elif position == "left":
+            # Legacy: Auto-fill left zone
             content_start_pct = slides_config.get("content_start_x_pct", 0.33)
             content_start_x = int(width * content_start_pct)
 
-            # Resize to fill the left zone width
             avatar_clip = avatar_clip.resize(width=content_start_x)
-
-            # Cap height at frame height
             if avatar_clip.h > height:
                 avatar_clip = avatar_clip.resize(height=height)
 
-            # Centre horizontally in left zone, bottom-align vertically
             x_pos = (content_start_x - avatar_clip.w) // 2
             y_pos = height - avatar_clip.h
         else:

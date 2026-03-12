@@ -29,9 +29,9 @@ languages:
   supported:
     - code: "hi"
       name: "Hinglish"
-      tts_voice: "hi-IN-MadhurNeural"
-      tts_rate: "-5%"                    # Slightly slower for educational content
-      tts_pitch: "+0Hz"
+      tts_voice: "hi-IN-MadhurNeural"   # Natural Indian male voice
+      tts_rate: "-8%"                    # Slightly slower for natural conversational feel
+      tts_pitch: "-2Hz"                  # Slightly deeper for authoritative tone
 
 # LLM Configuration
 llm:
@@ -68,9 +68,9 @@ tts:
   output_format: "mp3"
 
   edge:
-    rate: "-5%"                          # Slower for clarity
-    pitch: "+0Hz"
-    volume: "+0%"
+    rate: "-8%"                          # Natural conversational pace
+    pitch: "-2Hz"                        # Slightly deeper for human-like authority
+    volume: "+5%"                        # Slightly louder for presence
 
   audio:
     normalize: true
@@ -78,6 +78,7 @@ tts:
     target_loudness: -14                 # LUFS for YouTube
     clarity_boost: true
     compressor: true
+    warmth_boost: true                   # Add warmth for natural voice
 
 # Avatar Configuration
 avatar:
@@ -101,11 +102,11 @@ avatar:
 composition:
   background:
     type: "solid"
-    color: "#0e1220"
+    color: "#000000"                     # Pure black background
 
   presentation_slides:
     enabled: true
-    content_start_x_pct: 0.33
+    content_start_x_pct: 0.0            # Full-screen slides (no left zone reserved)
     transition_duration: 0.5
     max_key_points: 4
     show_subject_badge: true
@@ -113,7 +114,10 @@ composition:
     bullet_style: "numbered"
 
   avatar:
-    position: "left"                     # Auto-fills left zone (content_start_x_pct), bottom-aligned
+    position: "overlay_left"             # Avatar overlays on top of slides, bottom-left, no background
+    scale: 0.55                          # Avatar height as fraction of video height
+    x_offset: 20                         # Pixels from left edge
+    transparent_bg: true                 # Remove avatar background, show only the person
 
   text:
     headline:

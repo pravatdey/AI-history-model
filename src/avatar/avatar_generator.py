@@ -32,37 +32,40 @@ class AvatarResult:
 
 class VisemeSpriteSheet:
     """
-    Creates mouth-shape sprites by warping the ACTUAL avatar face pixels
-    using cv2.remap displacement fields.  Each of 8 viseme positions is
-    combined with 4 amplitude levels → 32 pre-rendered RGBA sprites that
-    blend seamlessly onto the face via feathered alpha.
+    Creates realistic mouth-shape sprites by warping the ACTUAL avatar face
+    pixels using cv2.remap displacement fields, with enhanced lip rendering
+    that produces visible, natural-looking mouth movements.
 
-    Viseme IDs:
+    Each of 8 viseme positions is combined with 6 amplitude levels → 48
+    pre-rendered RGBA sprites that blend seamlessly onto the face via
+    feathered alpha.
+
+    Viseme IDs (matching standard phoneme-to-viseme charts):
       0 CLOSED  — lips together, neutral
-      1 AH      — mouth open, jaw drops  (a, e, i)
-      2 OH      — lips rounded            (o, u)
-      3 EE      — wide smile shape        (ee, y)
-      4 FV      — lower lip tucked        (f, v)
-      5 BMP     — lips pressed            (b, m, p)
-      6 LDN     — small opening           (l, d, t, n, r, s)
-      7 WQ      — lips pursed / forward   (w, ch, j, sh, k, g)
+      1 AH      — mouth wide open, jaw drops, teeth visible  (a, e, i)
+      2 OH      — lips rounded into 'O' shape                (o, u)
+      3 EE      — wide horizontal smile, teeth showing       (ee, y)
+      4 FV      — lower lip tucked under upper teeth          (f, v)
+      5 BMP     — lips firmly pressed together                (b, m, p)
+      6 LDN     — small opening, tongue visible               (l, d, t, n, r, s)
+      7 WQ      — lips pursed / pushed forward                (w, ch, j, sh, k, g)
     """
 
     NUM_VISEMES = 8
-    AMP_LEVELS = 4  # amplitude sub-levels per viseme
+    AMP_LEVELS = 6  # More amplitude sub-levels for smoother transitions
 
     def __init__(self, mouth_region: dict, face_image):
         import cv2
         import numpy as np
-        from PIL import Image, ImageFilter
+        from PIL import Image, ImageFilter, ImageDraw
 
         self.region = mouth_region
         cx, cy = mouth_region['cx'], mouth_region['cy']
         mw, mh = mouth_region['w'], mouth_region['h']
 
         # Extended crop around mouth (cheeks + chin for natural blending)
-        pad_w = int(mw * 1.3)
-        pad_h = int(mh * 3.5)
+        pad_w = int(mw * 1.6)
+        pad_h = int(mh * 4.0)
         self.crop_x1 = max(0, cx - pad_w)
         self.crop_y1 = max(0, cy - pad_h // 2)
         self.crop_x2 = min(face_image.width, cx + pad_w)
@@ -74,13 +77,16 @@ class VisemeSpriteSheet:
         self.rel_cx = cx - self.crop_x1
         self.rel_cy = cy - self.crop_y1
 
-        # Base crop as numpy BGR (for cv2) and RGB PIL
+        # Base crop as numpy RGB
         base_pil = face_image.crop((self.crop_x1, self.crop_y1,
                                     self.crop_x2, self.crop_y2))
         self.base_np = np.array(base_pil)  # RGB, H×W×3
 
-        # Sample a dark cavity colour from inside the mouth area
+        # Sample skin and cavity colours from the face for realistic rendering
+        self._skin_color = self._sample_skin_color()
         self._cavity_color = self._sample_cavity_color()
+        self._lip_color = self._sample_lip_color()
+        self._teeth_color = np.array([245, 240, 235], dtype=np.uint8)
 
         # Build feathered alpha mask (reused for every sprite)
         self._alpha_mask = self._build_feather_mask(self.crop_w, self.crop_h)
@@ -97,6 +103,45 @@ class VisemeSpriteSheet:
 
     # ── helpers ────────────────────────────────────────────────────────────
 
+    def _sample_skin_color(self):
+        """Sample average skin colour around the mouth for blending."""
+        import numpy as np
+        h, w = self.base_np.shape[:2]
+        cx, cy = self.rel_cx, self.rel_cy
+        mw = self.region['w']
+        # Sample from area around mouth (not inside)
+        r = max(4, mw // 3)
+        patches = []
+        for dy_off in [-r * 2, r * 2]:  # above and below mouth
+            y1 = max(0, cy + dy_off - r)
+            y2 = min(h, cy + dy_off + r)
+            x1 = max(0, cx - r)
+            x2 = min(w, cx + r)
+            patch = self.base_np[y1:y2, x1:x2]
+            if patch.size > 0:
+                patches.append(patch.mean(axis=(0, 1)))
+        if patches:
+            return np.mean(patches, axis=0).astype(np.uint8)
+        return np.array([210, 180, 155], dtype=np.uint8)
+
+    def _sample_lip_color(self):
+        """Sample lip colour from the mouth area."""
+        import numpy as np
+        h, w = self.base_np.shape[:2]
+        cx, cy = self.rel_cx, self.rel_cy
+        mw, mh = self.region['w'], self.region['h']
+        r_x = max(2, mw // 4)
+        r_y = max(2, mh // 4)
+        y1, y2 = max(0, cy - r_y), min(h, cy + r_y)
+        x1, x2 = max(0, cx - r_x), min(w, cx + r_x)
+        patch = self.base_np[y1:y2, x1:x2]
+        if patch.size > 0:
+            avg = patch.mean(axis=(0, 1)).astype(np.float32)
+            # Redden slightly for natural lip colour
+            lip = np.array([min(255, avg[0] * 1.1), avg[1] * 0.85, avg[2] * 0.80])
+            return np.clip(lip, 0, 255).astype(np.uint8)
+        return np.array([195, 120, 110], dtype=np.uint8)
+
     def _sample_cavity_color(self):
         """Dark colour to paint inside open-mouth visemes."""
         import numpy as np
@@ -107,13 +152,12 @@ class VisemeSpriteSheet:
         x1, x2 = max(0, cx - r), min(w, cx + r)
         patch = self.base_np[y1:y2, x1:x2]
         if patch.size == 0:
-            return np.array([30, 15, 15], dtype=np.uint8)
+            return np.array([25, 12, 12], dtype=np.uint8)
         avg = patch.mean(axis=(0, 1)).astype(np.float32)
-        # Darken significantly — mouth interior is very dark
-        dark = np.clip(avg * 0.15, 0, 40).astype(np.uint8)
+        dark = np.clip(avg * 0.12, 0, 35).astype(np.uint8)
         return dark
 
-    def _build_feather_mask(self, w, h, feather=8):
+    def _build_feather_mask(self, w, h, feather=10):
         """Elliptical feathered alpha mask for smooth blending."""
         from PIL import Image, ImageDraw, ImageFilter
         mask = Image.new('L', (w, h), 0)
@@ -127,10 +171,14 @@ class VisemeSpriteSheet:
     def _warp_for_viseme(self, viseme_id, amplitude, cv2, np, Image):
         """
         Warp the mouth crop for a specific viseme + amplitude using
-        cv2.remap with a displacement field.
+        cv2.remap with enhanced displacement fields that produce
+        realistic, clearly visible mouth movements.
 
-        The displacement is strongest at the mouth centre and fades
-        smoothly via a gaussian mask, so surrounding skin stays natural.
+        Key improvements:
+        - Stronger warp magnitudes for visible lip movement
+        - Lip-specific rendering with proper lip outlines
+        - Teeth visibility in open-mouth positions
+        - Natural jaw movement with chin displacement
         """
         h, w = self.base_np.shape[:2]
         mcx, mcy = float(self.rel_cx), float(self.rel_cy)
@@ -145,66 +193,90 @@ class VisemeSpriteSheet:
         dx = (map_x - mcx) / max(w / 2, 1)
         dy = (map_y - mcy) / max(h / 2, 1)
 
-        # Gaussian influence: strongest at mouth, fading out
-        influence = np.exp(-(dx ** 2 + dy ** 2) * 2.5)
+        # Gaussian influence: strongest at mouth, fading out (tighter focus)
+        influence = np.exp(-(dx ** 2 + dy ** 2) * 3.0)
 
-        # Mouth half-mask: below mouth centre
-        below = np.clip((map_y - mcy) / max(h * 0.15, 1), 0, 1)
-        above = np.clip((mcy - map_y) / max(h * 0.15, 1), 0, 1)
+        # Mouth half-masks with smoother transitions
+        below = np.clip((map_y - mcy) / max(h * 0.12, 1), 0, 1)
+        above = np.clip((mcy - map_y) / max(h * 0.12, 1), 0, 1)
 
-        # Scale factor based on amplitude (0 → no warp, 1 → max)
+        # Lip-zone mask: tight area around mouth for lip-specific effects
+        lip_influence = np.exp(-(dx ** 2 * 6 + dy ** 2 * 8))
+
         amp = amplitude
 
-        # ── Apply viseme-specific displacements ────────────────────────
+        # ── Apply viseme-specific displacements (enhanced magnitudes) ──
         if viseme_id == 0:
-            # CLOSED — no change
-            pass
+            # CLOSED — lips gently pressed, minimal change
+            press = amp * 1.5
+            map_y = map_y + dy * lip_influence * press * 0.3
 
         elif viseme_id == 1:
-            # AH — jaw drops, mouth opens wide vertically
-            jaw_drop = amp * 10.0
+            # AH — wide open mouth, jaw drops significantly, teeth/tongue visible
+            jaw_drop = amp * 16.0
             map_y = map_y - below * influence * jaw_drop
-            # Slight horizontal widening
-            h_widen = amp * 3.0
-            map_x = map_x - dx * influence * h_widen * 0.3
+            # Chin drops down
+            chin_drop = amp * 6.0
+            chin_mask = np.clip((map_y - mcy) / max(h * 0.25, 1), 0, 1)
+            map_y = map_y - chin_mask * influence * chin_drop
+            # Horizontal widening
+            h_widen = amp * 5.0
+            map_x = map_x - dx * lip_influence * h_widen * 0.4
 
         elif viseme_id == 2:
-            # OH — lips round: horizontal compress + vertical stretch
-            h_compress = amp * 5.0
-            v_stretch = amp * 7.0
-            map_x = map_x + dx * influence * h_compress
+            # OH — lips form round 'O', pushed forward
+            h_compress = amp * 8.0
+            v_stretch = amp * 10.0
+            map_x = map_x + dx * lip_influence * h_compress
             map_y = map_y - below * influence * v_stretch
+            # Lip protrusion effect (puckering)
+            pucker = amp * 3.0
+            map_x = map_x + dx * lip_influence * pucker * 0.5
 
         elif viseme_id == 3:
-            # EE — wide smile: horizontal stretch + slight vertical compress
-            h_stretch = amp * 6.0
-            v_compress = amp * 2.0
-            map_x = map_x - dx * influence * h_stretch
-            map_y = map_y + below * influence * v_compress * 0.5
+            # EE — wide horizontal smile, teeth showing, lips stretched
+            h_stretch = amp * 10.0
+            v_compress = amp * 3.0
+            map_x = map_x - dx * lip_influence * h_stretch
+            map_y = map_y + below * lip_influence * v_compress * 0.4
+            # Upper lip lifts slightly to show teeth
+            upper_lift = amp * 3.0
+            map_y = map_y + above * lip_influence * upper_lift * 0.3
 
         elif viseme_id == 4:
-            # FV — lower lip tucks up toward upper teeth
-            lip_tuck = amp * 5.0
-            map_y = map_y + below * influence * lip_tuck * 0.6
+            # FV — lower lip tucks firmly under upper teeth
+            lip_tuck = amp * 8.0
+            map_y = map_y + below * lip_influence * lip_tuck * 0.7
             # Slight narrowing
-            map_x = map_x + dx * influence * amp * 2.0
+            map_x = map_x + dx * lip_influence * amp * 3.0
+            # Upper lip stays fixed — asymmetric movement
+            map_y = map_y - above * lip_influence * amp * 1.5
 
         elif viseme_id == 5:
-            # BMP — lips press together (vertical compression at mouth)
-            press = amp * 4.0
-            map_y = map_y + dy * influence * press * 0.5
+            # BMP — lips pressed firmly together, slight horizontal spread
+            press = amp * 6.0
+            map_y = map_y + dy * lip_influence * press * 0.6
+            # Slight horizontal tightening
+            h_tight = amp * 2.0
+            map_x = map_x + dx * lip_influence * h_tight * 0.3
 
         elif viseme_id == 6:
-            # LDN — small opening, slight jaw drop
-            jaw_drop = amp * 5.0
+            # LDN — small opening, tongue position visible
+            jaw_drop = amp * 8.0
             map_y = map_y - below * influence * jaw_drop
+            # Slight narrowing (tongue occupies space)
+            h_narrow = amp * 2.0
+            map_x = map_x + dx * lip_influence * h_narrow * 0.3
 
         elif viseme_id == 7:
-            # WQ — lips purse forward: horizontal compress (rounded)
-            h_compress = amp * 6.0
-            v_slight = amp * 3.0
-            map_x = map_x + dx * influence * h_compress
-            map_y = map_y - below * influence * v_slight * 0.5
+            # WQ — lips pursed forward, rounded (like blowing)
+            h_compress = amp * 9.0
+            v_slight = amp * 5.0
+            map_x = map_x + dx * lip_influence * h_compress
+            map_y = map_y - below * influence * v_slight * 0.6
+            # Forward protrusion effect
+            pucker = amp * 4.0
+            map_x = map_x + dx * lip_influence * pucker * 0.4
 
         # Remap
         warped = cv2.remap(
@@ -213,9 +285,13 @@ class VisemeSpriteSheet:
             borderMode=cv2.BORDER_REFLECT_101,
         )
 
-        # Paint dark cavity for open-mouth visemes
-        if viseme_id in (1, 2, 3, 6, 7) and amp > 0.15:
-            self._paint_cavity(warped, np, viseme_id, amp)
+        # Paint realistic mouth interior for open-mouth visemes
+        if viseme_id in (1, 2, 3, 6, 7) and amp > 0.10:
+            self._paint_realistic_mouth(warped, np, viseme_id, amp)
+
+        # Paint lip outlines for all visemes (subtle for closed, stronger for open)
+        if amp > 0.05:
+            self._paint_lip_outlines(warped, np, viseme_id, amp)
 
         # Convert to RGBA PIL with feathered alpha
         rgba = np.zeros((h, w, 4), dtype=np.uint8)
@@ -223,38 +299,85 @@ class VisemeSpriteSheet:
         rgba[:, :, 3] = np.array(self._alpha_mask)
         return Image.fromarray(rgba, 'RGBA')
 
-    def _paint_cavity(self, img_np, np, viseme_id, amplitude):
-        """Paint a subtle dark ellipse at the mouth centre to simulate cavity."""
+    def _paint_realistic_mouth(self, img_np, np, viseme_id, amplitude):
+        """
+        Paint a realistic mouth interior with dark cavity, teeth hint, and
+        tongue suggestion for open-mouth visemes.
+        """
         h, w = img_np.shape[:2]
         mcx, mcy = self.rel_cx, self.rel_cy
         mw = self.region['w']
 
-        # Cavity dimensions depend on viseme shape
-        if viseme_id in (1,):  # AH — wide horizontal
-            cw = int(mw * 0.5 * amplitude)
-            ch = int(mw * 0.35 * amplitude)
-        elif viseme_id in (2, 7):  # OH, WQ — narrow rounded
-            cw = int(mw * 0.3 * amplitude)
-            ch = int(mw * 0.35 * amplitude)
+        # Cavity dimensions — much more visible than before
+        if viseme_id == 1:  # AH — wide open
+            cw = int(mw * 0.65 * amplitude)
+            ch = int(mw * 0.50 * amplitude)
+        elif viseme_id in (2, 7):  # OH, WQ — rounded
+            cw = int(mw * 0.40 * amplitude)
+            ch = int(mw * 0.45 * amplitude)
         elif viseme_id == 3:  # EE — wide thin
-            cw = int(mw * 0.5 * amplitude)
-            ch = int(mw * 0.15 * amplitude)
-        else:  # LDN etc — small
-            cw = int(mw * 0.3 * amplitude)
-            ch = int(mw * 0.2 * amplitude)
+            cw = int(mw * 0.60 * amplitude)
+            ch = int(mw * 0.20 * amplitude)
+        else:  # LDN — small
+            cw = int(mw * 0.35 * amplitude)
+            ch = int(mw * 0.25 * amplitude)
 
-        if cw < 2 or ch < 2:
+        if cw < 3 or ch < 3:
             return
 
         # Create cavity elliptical mask
         Y, X = np.ogrid[:h, :w]
         ell = ((X - mcx) / max(cw, 1)) ** 2 + ((Y - mcy) / max(ch, 1)) ** 2
-        mask = np.clip(1.0 - ell, 0, 1)
-        mask = mask ** 1.5  # sharper edges
+        cavity_mask = np.clip(1.0 - ell, 0, 1)
+        cavity_mask = cavity_mask ** 1.3
 
-        # Blend dark cavity colour
+        # Dark mouth interior
         cavity = self._cavity_color.reshape(1, 1, 3).astype(np.float32)
-        blended = img_np.astype(np.float32) * (1 - mask[:, :, None]) + cavity * mask[:, :, None]
+        blended = img_np.astype(np.float32) * (1 - cavity_mask[:, :, None]) + \
+                  cavity * cavity_mask[:, :, None]
+
+        # Upper teeth hint (white strip at top of cavity for AH, EE, LDN)
+        if viseme_id in (1, 3, 6) and amplitude > 0.25:
+            teeth_h = max(2, int(ch * 0.25))
+            teeth_w = int(cw * 0.7)
+            teeth_y = mcy - int(ch * 0.3)
+            teeth_ell = ((X - mcx) / max(teeth_w, 1)) ** 2 + \
+                        ((Y - teeth_y) / max(teeth_h, 1)) ** 2
+            teeth_mask = np.clip(1.0 - teeth_ell, 0, 1) ** 2 * amplitude * 0.5
+            teeth = self._teeth_color.reshape(1, 1, 3).astype(np.float32)
+            blended = blended * (1 - teeth_mask[:, :, None]) + \
+                      teeth * teeth_mask[:, :, None]
+
+        img_np[:] = np.clip(blended, 0, 255).astype(np.uint8)
+
+    def _paint_lip_outlines(self, img_np, np, viseme_id, amplitude):
+        """Paint subtle lip outlines for more defined mouth shape."""
+        h, w = img_np.shape[:2]
+        mcx, mcy = self.rel_cx, self.rel_cy
+        mw = self.region['w']
+        mh = self.region['h']
+
+        # Lip outline: thin tinted band around mouth opening
+        lip_w = int(mw * 0.5 * (0.8 + amplitude * 0.4))
+        lip_h = int(mh * 0.6 * (0.5 + amplitude * 0.5))
+
+        if lip_w < 2 or lip_h < 2:
+            return
+
+        Y, X = np.ogrid[:h, :w]
+        ell = ((X - mcx) / max(lip_w, 1)) ** 2 + ((Y - mcy) / max(lip_h, 1)) ** 2
+
+        # Ring mask (lip outline = donut shape)
+        outer = np.clip(1.0 - ell, 0, 1)
+        inner_w = max(1, lip_w - max(2, int(mw * 0.06)))
+        inner_h = max(1, lip_h - max(2, int(mh * 0.08)))
+        inner_ell = ((X - mcx) / max(inner_w, 1)) ** 2 + ((Y - mcy) / max(inner_h, 1)) ** 2
+        inner = np.clip(1.0 - inner_ell, 0, 1)
+        ring_mask = np.clip(outer - inner, 0, 1) * amplitude * 0.35
+
+        lip = self._lip_color.reshape(1, 1, 3).astype(np.float32)
+        blended = img_np.astype(np.float32) * (1 - ring_mask[:, :, None]) + \
+                  lip * ring_mask[:, :, None]
         img_np[:] = np.clip(blended, 0, 255).astype(np.uint8)
 
     # ── public API ──────────────────────────────────────────────────────────
@@ -687,22 +810,37 @@ class AvatarGenerator:
                 if viseme_timeline is not None and frame_idx < len(viseme_timeline):
                     viseme_id = int(viseme_timeline[frame_idx])
                 else:
-                    # Amplitude-only fallback: map amplitude to AH(1) vs CLOSED(0)
-                    viseme_id = 1 if amplitude > 0.15 else 0
+                    # Amplitude-only fallback: richer mapping based on amplitude
+                    if amplitude > 0.6:
+                        viseme_id = 1   # AH — wide open
+                    elif amplitude > 0.4:
+                        viseme_id = 6   # LDN — medium opening
+                    elif amplitude > 0.2:
+                        viseme_id = 3   # EE — slight smile
+                    elif amplitude > 0.10:
+                        viseme_id = 5   # BMP — lips pressed
+                    else:
+                        viseme_id = 0   # CLOSED
 
-                # Natural micro-jitter on amplitude
-                jitter = (math.sin(t * 21.3) * 0.03 + math.cos(t * 13.7) * 0.02) * amplitude
+                # Natural micro-jitter on amplitude for organic feel
+                jitter = (math.sin(t * 21.3) * 0.04 + math.cos(t * 13.7) * 0.03) * amplitude
                 eff_amp = max(0.0, min(1.0, amplitude + jitter))
 
                 # Get the warped sprite
                 sprite = sprite_sheet.get_sprite(viseme_id, eff_amp)
 
-                # Transition blending: blend with previous viseme for smoothness
+                # Smooth transition: blend with previous 2 frames for natural coarticulation
                 if frame_idx > 0 and viseme_timeline is not None:
                     prev_viseme = int(viseme_timeline[max(0, frame_idx - 1)])
                     if prev_viseme != viseme_id:
                         prev_sprite = sprite_sheet.get_sprite(prev_viseme, eff_amp)
-                        sprite = Image.blend(prev_sprite, sprite, 0.7)
+                        sprite = Image.blend(prev_sprite, sprite, 0.65)
+                    # Additional smoothing with 2-frames-back for coarticulation
+                    if frame_idx > 1:
+                        prev2_viseme = int(viseme_timeline[max(0, frame_idx - 2)])
+                        if prev2_viseme != viseme_id and prev2_viseme != prev_viseme:
+                            prev2_sprite = sprite_sheet.get_sprite(prev2_viseme, eff_amp * 0.5)
+                            sprite = Image.blend(prev2_sprite, sprite, 0.85)
 
                 # Composite onto frame
                 frame_img.paste(sprite, paste_pos, sprite)

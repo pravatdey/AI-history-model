@@ -502,6 +502,15 @@ class HistoryPipeline:
             )
 
             thumbnail_bg = self.config.get("thumbnail", {}).get("background_image", "")
+            if thumbnail_bg and not Path(thumbnail_bg).is_absolute():
+                # Resolve relative path from project root
+                project_root = Path(__file__).parent
+                resolved = project_root / thumbnail_bg
+                if not resolved.exists():
+                    # Also check in assets/avatars
+                    resolved = project_root / "assets" / "avatars" / thumbnail_bg
+                thumbnail_bg = str(resolved) if resolved.exists() else thumbnail_bg
+
             thumbnail_result = self.thumbnail_generator.generate(
                 output_path=thumbnail_path,
                 title=f"Part {topic.part_number} | {topic.title}",

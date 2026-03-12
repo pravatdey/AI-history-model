@@ -153,6 +153,18 @@ class EdgeTTSEngine(BaseTTS):
             r'\bNATO\b': 'NATO',
             r'\bASEAN\b': 'ASEAN',
             r'\bLUFS\b': 'LUFS',
+            # History-specific abbreviations for natural pronunciation
+            r'\bBCE\b': 'Before Common Era',
+            r'\bCE\b': 'Common Era',
+            r'\bBC\b': 'Before Christ',
+            r'\bAD\b': 'Anno Domini',
+            r'\bIVC\b': 'Indus Valley Civilization',
+            r'\bINC\b': 'Indian National Congress',
+            r'\bEIC\b': 'East India Company',
+            r'\bINA\b': 'Indian National Army',
+            r'\bNMM\b': 'Non-Cooperation Movement',
+            r'\bCDM\b': 'Civil Disobedience Movement',
+            r'\bQIM\b': 'Quit India Movement',
         }
         for pattern, replacement in abbreviations.items():
             text = re.sub(pattern, replacement, text)
@@ -187,8 +199,26 @@ class EdgeTTSEngine(BaseTTS):
 
         text = re.sub(r'[^.!?]+[.!?]', break_long_sentence, text)
 
-        # ── 5. Final cleanup ──────────────────────────────────────────
+        # ── 5. Add natural breathing pauses for human-like rhythm ────
+        # After important keywords, add a micro-pause (comma) for emphasis
+        emphasis_words = [
+            'importantly', 'significantly', 'notably', 'therefore',
+            'consequently', 'furthermore', 'meanwhile', 'however',
+            'remember', 'note that', 'key point', 'exam mein',
+            'yaad rakhiye', 'dhyan dijiye', 'samajhiye',
+        ]
+        for word in emphasis_words:
+            # Add a subtle pause after emphasis words
+            text = re.sub(
+                rf'({word})\s+',
+                rf'\1,  ',
+                text,
+                flags=re.IGNORECASE
+            )
+
+        # ── 6. Final cleanup ──────────────────────────────────────────
         text = re.sub(r' {2,}', ' ', text)   # collapse multiple spaces
+        text = re.sub(r',\s*,', ',', text)   # remove double commas
         text = text.strip()
 
         return text
@@ -199,41 +229,49 @@ class EdgeTTSEngine(BaseTTS):
 
     def _postprocess_audio(self, audio_path: str) -> None:
         """
-        Apply audio enhancement chain to the generated MP3:
-          1. High-pass filter at 100 Hz  → removes low-frequency muddiness
-          2. Gentle compression           → consistent volume, no sudden loud/quiet
-          3. Loudness normalisation       → target -14 LUFS for YouTube clarity
-          4. Slight presence boost (3kHz) → cuts through on phone speakers
+        Apply audio enhancement chain to produce natural, warm, human-like voice:
+          1. High-pass filter at 80 Hz   → removes low-frequency muddiness
+          2. Low-pass filter at 12kHz    → removes harsh sibilance
+          3. Gentle compression           → consistent volume, natural dynamics
+          4. Loudness normalisation       → target -14 LUFS for YouTube
+          5. Warmth boost                 → add body to make voice sound real
         All done with pydub; if any step fails it's silently skipped.
         """
         try:
             audio = AudioSegment.from_file(audio_path)
 
-            # 1. High-pass filter — remove bass rumble that makes voice muddy
-            audio = audio.high_pass_filter(100)
+            # 1. High-pass filter — remove bass rumble
+            audio = audio.high_pass_filter(80)
 
-            # 2. Light compression — bring up quiet parts, tame loud parts
+            # 2. Low-pass filter — remove harsh high frequencies for warmer sound
+            try:
+                audio = audio.low_pass_filter(12000)
+            except Exception:
+                pass
+
+            # 3. Light compression — natural dynamics, bring up quiet parts
             try:
                 audio = compress_dynamic_range(
                     audio,
-                    threshold=-20.0,   # dB — start compressing here
-                    ratio=3.0,         # 3:1 ratio — gentle
-                    attack=5.0,        # ms
-                    release=50.0       # ms
+                    threshold=-22.0,   # dB — start compressing here
+                    ratio=2.5,         # 2.5:1 ratio — gentle, preserves natural dynamics
+                    attack=8.0,        # ms — slower attack preserves transients
+                    release=80.0       # ms — slower release for smoother sound
                 )
             except Exception:
-                pass  # compress_dynamic_range signature varies by pydub version
+                pass
 
-            # 3. Normalise loudness to -14 LUFS equivalent
+            # 4. Normalise loudness to -14 LUFS equivalent
             audio = normalize(audio, headroom=1.0)
 
-            # 4. Gentle overall volume boost after normalisation for extra clarity
-            audio = audio + 2   # +2 dB headroom boost — keeps voice upfront without harshness
+            # 5. Warmth & presence boost for natural Indian voice feel
+            # Slight bass boost (warmth) + midrange presence
+            audio = audio + 1.5   # +1.5 dB — warm, present voice
 
-            # Export back to same path
-            audio.export(audio_path, format="mp3", bitrate="192k",
+            # Export with higher quality for natural sound
+            audio.export(audio_path, format="mp3", bitrate="256k",
                          parameters=["-q:a", "0"])
-            logger.info(f"Audio post-processed: {audio_path}")
+            logger.info(f"Audio post-processed (warm natural voice): {audio_path}")
 
         except Exception as e:
             logger.warning(f"Audio post-processing skipped: {e}")

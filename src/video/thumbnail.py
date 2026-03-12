@@ -355,7 +355,9 @@ class ThumbnailGenerator:
         try:
             preset = STYLE_PRESETS.get(style, STYLE_PRESETS["default"])
             img = self._build_background(background_image, video_path)
-            img = self._composite_content(img, title, date, preset)
+            # Skip overlays when using a custom background image (it IS the thumbnail)
+            if not (background_image and Path(background_image).exists()):
+                img = self._composite_content(img, title, date, preset)
             self._save(img, output_path)
             logger.info(f"Thumbnail saved: {output_path}")
             return ThumbnailResult(True, str(output_path), self.size)
@@ -412,9 +414,9 @@ class ThumbnailGenerator:
         w, h = self.size
 
         if bg_image_path and Path(bg_image_path).exists():
-            img = Image.open(bg_image_path).resize(self.size)
-            # Darken to match navy feel
-            img = ImageEnhance.Brightness(img).enhance(0.35)
+            img = Image.open(bg_image_path).convert("RGB").resize(self.size)
+            # Use custom background as-is (no darkening or overlays)
+            return img
         elif video_path:
             img = self._extract_video_frame(video_path)
             img = ImageEnhance.Brightness(img).enhance(0.35)
@@ -570,7 +572,11 @@ class ThumbnailGenerator:
     def _save(self, img: Image.Image, output_path: str):
         out = Path(output_path)
         out.parent.mkdir(parents=True, exist_ok=True)
-        img.convert("RGB").save(str(out), "PNG", optimize=True)
+        fmt = out.suffix.lower()
+        if fmt in (".jpg", ".jpeg"):
+            img.convert("RGB").save(str(out), "JPEG", quality=95, optimize=True)
+        else:
+            img.convert("RGB").save(str(out), "PNG", optimize=True)
 
 
 # ---------------------------------------------------------------------------
