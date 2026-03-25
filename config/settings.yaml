@@ -114,6 +114,25 @@ avatar:
 
     prompt: "A professional Indian male teacher is speaking directly to the camera in a studio setting. He maintains eye contact, has natural head movements, and speaks with clear lip movements synchronized to the audio. The background is clean and professional."
 
+  # EchoMimic - Fallback lip-sync (AAAI 2025, Ant Group)
+  # HF Space: https://huggingface.co/spaces/fffiloni/EchoMimic
+  # Free, no GPU needed. Auto-chunks long audio into 5s segments.
+  echomimic:
+    hf_space_id: "fffiloni/EchoMimic"
+    width: 512
+    height: 512
+    fps: 24
+    seed: 420
+    facemask_dilation_ratio: 0.1
+    facecrop_dilation_ratio: 0.5
+    context_frames: 12
+    context_overlap: 3
+    cfg: 2.5
+    steps: 30
+    sample_rate: 16000
+    max_chunk_seconds: 5.0              # Shared Space limits audio to ~5s
+    chunk_overlap_seconds: 0.2          # Overlap between chunks for smooth transitions
+
   sadtalker:
     preprocess: "crop"
     still_mode: false
