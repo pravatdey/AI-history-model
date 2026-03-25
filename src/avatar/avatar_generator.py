@@ -411,23 +411,30 @@ class AvatarGenerator:
         sadtalker_path: str = None,
         wav2lip_path: str = None,
         multitalk_config: dict = None,
-        sadtalker_hf_config: dict = None
+        sadtalker_hf_config: dict = None,
+        moda_config: dict = None
     ):
         """
         Initialize avatar generator.
 
         Args:
-            method: Generation method ("multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
+            method: Generation method ("moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
             avatar_image: Path to default avatar image
             sadtalker_path: Path to SadTalker installation
             wav2lip_path: Path to Wav2Lip installation
             multitalk_config: Dict of MultiTalk configuration options
             sadtalker_hf_config: Dict of SadTalker HF Space configuration options
+            moda_config: Dict of MoDA configuration options
         """
         self.method = method
         self.avatar_image = avatar_image or "assets/avatars/news_anchor.png"
         self.sadtalker_path = sadtalker_path or os.getenv("SADTALKER_PATH", "")
         self.wav2lip_path = wav2lip_path or os.getenv("WAV2LIP_PATH", "")
+
+        # Initialize MoDA engine (best quality, free)
+        self._moda_engine = None
+        self._moda_config = moda_config or {}
+        self._init_moda()
 
         # Initialize MultiTalk engine
         self._multitalk_engine = None
@@ -450,6 +457,22 @@ class AvatarGenerator:
         self._default_mouth_region = None
 
         logger.info(f"AvatarGenerator initialized: method={self.method}, available={self.available_methods}")
+
+    def _init_moda(self):
+        """Initialize the MoDA engine if configured."""
+        try:
+            from src.avatar.moda_engine import MoDAEngine, MoDAConfig
+            config = MoDAConfig(
+                hf_space_id=self._moda_config.get("hf_space_id", "multimodalart/MoDA-fast-talking-head"),
+                emotion=self._moda_config.get("emotion", "None"),
+                cfg_scale=self._moda_config.get("cfg_scale", 1.2),
+                max_chunk_seconds=self._moda_config.get("max_chunk_seconds", 30.0),
+                max_retries=self._moda_config.get("max_retries", 3),
+                retry_delay=self._moda_config.get("retry_delay", 10.0),
+            )
+            self._moda_engine = MoDAEngine(config)
+        except Exception as e:
+            logger.debug(f"MoDA engine init skipped: {e}")
 
     def _init_multitalk(self):
         """Initialize the MultiTalk engine if configured."""
@@ -518,7 +541,11 @@ class AvatarGenerator:
         """Detect which generation methods are available"""
         available = ["simple"]  # Always available
 
-        # Check for MultiTalk (highest quality)
+        # Check for MoDA (best quality, free)
+        if self._moda_engine and self._moda_engine.is_available():
+            available.append("moda")
+
+        # Check for MultiTalk
         if self._multitalk_engine and self._multitalk_engine.is_available():
             available.append("multitalk")
 
@@ -561,7 +588,9 @@ class AvatarGenerator:
 
     def _select_best_method(self) -> str:
         """Select the best available method"""
-        if "multitalk" in self.available_methods:
+        if "moda" in self.available_methods:
+            return "moda"
+        elif "multitalk" in self.available_methods:
             return "multitalk"
         elif "sadtalker_hf" in self.available_methods:
             return "sadtalker_hf"
@@ -621,7 +650,9 @@ class AvatarGenerator:
         logger.info(f"Generating avatar video: method={method}")
 
         # Generate based on method
-        if method == "multitalk" and "multitalk" in self.available_methods:
+        if method == "moda" and "moda" in self.available_methods:
+            return self._generate_moda(audio_path, output_path, avatar_image)
+        elif method == "multitalk" and "multitalk" in self.available_methods:
             return self._generate_multitalk(audio_path, output_path, avatar_image)
         elif method == "sadtalker_hf" and "sadtalker_hf" in self.available_methods:
             return self._generate_sadtalker_hf(audio_path, output_path, avatar_image)
@@ -630,6 +661,38 @@ class AvatarGenerator:
         elif method == "wav2lip" and "wav2lip" in self.available_methods:
             return self._generate_wav2lip(audio_path, output_path, avatar_image)
         else:
+            return self._generate_simple(audio_path, output_path, avatar_image)
+
+    def _generate_moda(
+        self,
+        audio_path: str,
+        output_path: str,
+        avatar_image: str
+    ) -> AvatarResult:
+        """Generate video using MoDA (best quality, free HF Space)."""
+        try:
+            result = self._moda_engine.generate(
+                audio_path=audio_path,
+                image_path=avatar_image,
+                output_path=output_path,
+            )
+
+            if result["success"]:
+                return AvatarResult(
+                    success=True,
+                    video_path=result["video_path"],
+                    duration=result["duration"],
+                    method="moda",
+                )
+
+            raise Exception(result.get("error", "MoDA generation failed"))
+
+        except Exception as e:
+            logger.error(f"MoDA generation failed: {e}")
+            logger.info("Falling back to SadTalker HF")
+            # Fallback: sadtalker_hf -> simple
+            if "sadtalker_hf" in self.available_methods:
+                return self._generate_sadtalker_hf(audio_path, output_path, avatar_image)
             return self._generate_simple(audio_path, output_path, avatar_image)
 
     def _generate_multitalk(

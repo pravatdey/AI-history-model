@@ -83,9 +83,20 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "multitalk"                   # "sadtalker_hf", "multitalk", "sadtalker", "wav2lip", "simple", "auto"
+  provider: "moda"                        # "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto"
 
   default_image: "news_anchor.png"       # Reuse current affairs avatar
+
+  # MoDA Fast Talking Head - Best quality realistic avatar (2025)
+  # HF Space: https://huggingface.co/spaces/multimodalart/MoDA-fast-talking-head
+  # Free ZeroGPU, excellent lip sync + emotion control
+  moda:
+    hf_space_id: "multimodalart/MoDA-fast-talking-head"
+    emotion: "None"                        # Anger, Contempt, Disgust, Fear, Happiness, Neutral, Sadness, Surprise, None
+    cfg_scale: 1.2                         # Guidance scale (1.0-3.0)
+    max_chunk_seconds: 30                  # ZeroGPU 120s timeout, 30s audio is safe
+    max_retries: 3
+    retry_delay: 10
 
   # MeiGen MultiTalk - Best quality lip-sync (NeurIPS 2025)
   # GitHub: https://github.com/MeiGen-AI/MultiTalk
