@@ -33,7 +33,13 @@ class MultiTalkConfig:
     execution_mode: str = "hf_space"
 
     # HuggingFace Space settings
-    hf_space_id: str = "fffiloni/Meigen-MultiTalk"
+    hf_space_id: str = "Benesp/Meigen-MultiTalk"
+    hf_space_ids: list = field(default_factory=lambda: [
+        "Benesp/Meigen-MultiTalk",
+        "martylabs/Meigen-MultiTalk",
+        "arunabks/Meigen-MultiTalk",
+        "fffiloni/Meigen-MultiTalk",
+    ])
     hf_sample_steps: int = 12            # Default for the Space (fast)
 
     # Local mode settings
@@ -168,22 +174,33 @@ class MultiTalkEngine:
         output_path: str,
         prompt: Optional[str] = None,
     ) -> dict:
-        """Generate video via HF Space with retries on failure."""
+        """Generate video via HF Space, cycling through multiple spaces on failure."""
+        spaces = self.config.hf_space_ids or [self.config.hf_space_id]
         last_error = ""
-        for attempt in range(1, self.config.max_retries + 1):
-            logger.info(f"MultiTalk HF Space attempt {attempt}/{self.config.max_retries}")
-            result = self._generate_via_hf_space(audio_path, image_path, output_path, prompt)
-            if result["success"]:
-                return result
-            last_error = result.get("error", "Unknown error")
-            logger.warning(f"Attempt {attempt} failed: {last_error}")
-            if attempt < self.config.max_retries:
-                logger.info(f"Retrying in {self.config.retry_delay:.0f}s...")
-                time.sleep(self.config.retry_delay)
+
+        for space_id in spaces:
+            logger.info(f"Trying MultiTalk HF Space: {space_id}")
+            for attempt in range(1, self.config.max_retries + 1):
+                logger.info(f"  Attempt {attempt}/{self.config.max_retries} on {space_id}")
+                result = self._generate_via_hf_space(
+                    audio_path, image_path, output_path, prompt,
+                    space_id_override=space_id,
+                )
+                if result["success"]:
+                    return result
+                last_error = result.get("error", "Unknown error")
+                logger.warning(f"  Attempt {attempt} failed: {last_error}")
+                # Don't retry same space if it's a code bug (not transient)
+                if "not defined" in last_error or "TypeError" in last_error:
+                    logger.info(f"  Skipping remaining retries for {space_id} (code bug)")
+                    break
+                if attempt < self.config.max_retries:
+                    logger.info(f"  Retrying in {self.config.retry_delay:.0f}s...")
+                    time.sleep(self.config.retry_delay)
 
         return {
             "success": False, "video_path": "", "duration": 0,
-            "error": f"MultiTalk failed after {self.config.max_retries} retries: {last_error}",
+            "error": f"MultiTalk failed on all spaces: {last_error}",
         }
 
     def _generate_chunked(
@@ -286,13 +303,15 @@ class MultiTalkEngine:
         image_path: str,
         output_path: str,
         prompt: Optional[str] = None,
+        space_id_override: Optional[str] = None,
     ) -> dict:
         """Generate video via the free HuggingFace Gradio Space API."""
         try:
             from gradio_client import Client, handle_file
 
-            logger.info(f"Connecting to HF Space: {self.config.hf_space_id}")
-            client = Client(self.config.hf_space_id)
+            space_id = space_id_override or self.config.hf_space_id
+            logger.info(f"Connecting to HF Space: {space_id}")
+            client = Client(space_id)
 
             # Ensure audio is WAV
             wav_audio = self._ensure_wav(audio_path)

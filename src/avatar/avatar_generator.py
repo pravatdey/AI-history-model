@@ -457,7 +457,13 @@ class AvatarGenerator:
             from src.avatar.multitalk_engine import MultiTalkEngine, MultiTalkConfig
             config = MultiTalkConfig(
                 execution_mode=self._multitalk_config.get("execution_mode", "hf_space"),
-                hf_space_id=self._multitalk_config.get("hf_space_id", "fffiloni/Meigen-MultiTalk"),
+                hf_space_id=self._multitalk_config.get("hf_space_id", "Benesp/Meigen-MultiTalk"),
+                hf_space_ids=self._multitalk_config.get("hf_space_ids", [
+                    "Benesp/Meigen-MultiTalk",
+                    "martylabs/Meigen-MultiTalk",
+                    "arunabks/Meigen-MultiTalk",
+                    "fffiloni/Meigen-MultiTalk",
+                ]),
                 hf_sample_steps=self._multitalk_config.get("hf_sample_steps", 12),
                 multitalk_path=self._multitalk_config.get("path", os.getenv("MULTITALK_PATH", "")),
                 ckpt_dir=self._multitalk_config.get("ckpt_dir", ""),

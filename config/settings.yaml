@@ -94,7 +94,13 @@ avatar:
     execution_mode: "hf_space"           # "hf_space" (free API) or "local" (needs CUDA GPU)
 
     # HuggingFace Space settings (free, no GPU needed)
-    hf_space_id: "fffiloni/Meigen-MultiTalk"
+    # Multiple spaces to try in order (fallback if one is broken)
+    hf_space_ids:
+      - "Benesp/Meigen-MultiTalk"
+      - "martylabs/Meigen-MultiTalk"
+      - "arunabks/Meigen-MultiTalk"
+      - "fffiloni/Meigen-MultiTalk"
+    hf_space_id: "Benesp/Meigen-MultiTalk"    # Primary space
     hf_sample_steps: 12                  # Sampling steps for HF Space (12 = fast default)
     max_chunk_seconds: 60                # Max audio per HF Space call (60s safe limit)
     max_retries: 3                       # Retry failed chunks before giving up
