@@ -410,17 +410,19 @@ class AvatarGenerator:
         avatar_image: str = None,
         sadtalker_path: str = None,
         wav2lip_path: str = None,
-        multitalk_config: dict = None
+        multitalk_config: dict = None,
+        sadtalker_hf_config: dict = None
     ):
         """
         Initialize avatar generator.
 
         Args:
-            method: Generation method ("multitalk", "sadtalker", "wav2lip", "simple", "auto")
+            method: Generation method ("multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
             avatar_image: Path to default avatar image
             sadtalker_path: Path to SadTalker installation
             wav2lip_path: Path to Wav2Lip installation
             multitalk_config: Dict of MultiTalk configuration options
+            sadtalker_hf_config: Dict of SadTalker HF Space configuration options
         """
         self.method = method
         self.avatar_image = avatar_image or "assets/avatars/news_anchor.png"
@@ -431,6 +433,11 @@ class AvatarGenerator:
         self._multitalk_engine = None
         self._multitalk_config = multitalk_config or {}
         self._init_multitalk()
+
+        # Initialize SadTalker HF Space engine
+        self._sadtalker_hf_engine = None
+        self._sadtalker_hf_config = sadtalker_hf_config or {}
+        self._init_sadtalker_hf()
 
         # Detect available methods
         self.available_methods = self._detect_methods()
@@ -450,7 +457,7 @@ class AvatarGenerator:
             from src.avatar.multitalk_engine import MultiTalkEngine, MultiTalkConfig
             config = MultiTalkConfig(
                 execution_mode=self._multitalk_config.get("execution_mode", "hf_space"),
-                hf_space_id=self._multitalk_config.get("hf_space_id", "pravatdey/Meigen-MultiTalk"),
+                hf_space_id=self._multitalk_config.get("hf_space_id", "fffiloni/Meigen-MultiTalk"),
                 hf_sample_steps=self._multitalk_config.get("hf_sample_steps", 12),
                 multitalk_path=self._multitalk_config.get("path", os.getenv("MULTITALK_PATH", "")),
                 ckpt_dir=self._multitalk_config.get("ckpt_dir", ""),
@@ -476,6 +483,28 @@ class AvatarGenerator:
         except Exception as e:
             logger.debug(f"MultiTalk engine init skipped: {e}")
 
+    def _init_sadtalker_hf(self):
+        """Initialize the SadTalker HF Space engine if configured."""
+        try:
+            from src.avatar.sadtalker_hf_engine import SadTalkerHFEngine, SadTalkerHFConfig
+            cfg = self._sadtalker_hf_config
+            config = SadTalkerHFConfig(
+                hf_space_id=cfg.get("hf_space_id", "vinthony/SadTalker"),
+                preprocess=cfg.get("preprocess", "crop"),
+                size_of_image=cfg.get("size_of_image", 512),
+                still_mode=cfg.get("still_mode", True),
+                enhancer=cfg.get("enhancer", True),
+                pose_style=cfg.get("pose_style", 0),
+                exp_weight=cfg.get("exp_weight", 1.0),
+                batch_size=cfg.get("batch_size", 1),
+                facerender=cfg.get("facerender", "facevid2vid"),
+                blink_every=cfg.get("blink_every", True),
+                max_chunk_seconds=cfg.get("max_chunk_seconds", 30.0),
+            )
+            self._sadtalker_hf_engine = SadTalkerHFEngine(config)
+        except Exception as e:
+            logger.debug(f"SadTalker HF engine init skipped: {e}")
+
     def _detect_methods(self) -> list:
         """Detect which generation methods are available"""
         available = ["simple"]  # Always available
@@ -484,7 +513,11 @@ class AvatarGenerator:
         if self._multitalk_engine and self._multitalk_engine.is_available():
             available.append("multitalk")
 
-        # Check for SadTalker
+        # Check for SadTalker HF Space (free, no local GPU needed)
+        if self._sadtalker_hf_engine and self._sadtalker_hf_engine.is_available():
+            available.append("sadtalker_hf")
+
+        # Check for SadTalker (local)
         if self._check_sadtalker():
             available.append("sadtalker")
 
@@ -521,6 +554,8 @@ class AvatarGenerator:
         """Select the best available method"""
         if "multitalk" in self.available_methods:
             return "multitalk"
+        elif "sadtalker_hf" in self.available_methods:
+            return "sadtalker_hf"
         elif "sadtalker" in self.available_methods:
             return "sadtalker"
         elif "wav2lip" in self.available_methods:
@@ -579,6 +614,8 @@ class AvatarGenerator:
         # Generate based on method
         if method == "multitalk" and "multitalk" in self.available_methods:
             return self._generate_multitalk(audio_path, output_path, avatar_image)
+        elif method == "sadtalker_hf" and "sadtalker_hf" in self.available_methods:
+            return self._generate_sadtalker_hf(audio_path, output_path, avatar_image)
         elif method == "sadtalker" and "sadtalker" in self.available_methods:
             return self._generate_sadtalker(audio_path, output_path, avatar_image)
         elif method == "wav2lip" and "wav2lip" in self.available_methods:
@@ -612,6 +649,42 @@ class AvatarGenerator:
 
         except Exception as e:
             logger.error(f"MultiTalk generation failed: {e}")
+            logger.info("Falling back to next available method")
+            # Fallback chain: sadtalker_hf -> sadtalker -> wav2lip -> simple
+            if "sadtalker_hf" in self.available_methods:
+                return self._generate_sadtalker_hf(audio_path, output_path, avatar_image)
+            elif "sadtalker" in self.available_methods:
+                return self._generate_sadtalker(audio_path, output_path, avatar_image)
+            elif "wav2lip" in self.available_methods:
+                return self._generate_wav2lip(audio_path, output_path, avatar_image)
+            return self._generate_simple(audio_path, output_path, avatar_image)
+
+    def _generate_sadtalker_hf(
+        self,
+        audio_path: str,
+        output_path: str,
+        avatar_image: str
+    ) -> AvatarResult:
+        """Generate video using SadTalker HF Space (free, with chunking)."""
+        try:
+            result = self._sadtalker_hf_engine.generate(
+                audio_path=audio_path,
+                image_path=avatar_image,
+                output_path=output_path,
+            )
+
+            if result["success"]:
+                return AvatarResult(
+                    success=True,
+                    video_path=result["video_path"],
+                    duration=result["duration"],
+                    method="sadtalker_hf",
+                )
+
+            raise Exception(result.get("error", "SadTalker HF generation failed"))
+
+        except Exception as e:
+            logger.error(f"SadTalker HF generation failed: {e}")
             logger.info("Falling back to next available method")
             # Fallback chain: sadtalker -> wav2lip -> simple
             if "sadtalker" in self.available_methods:

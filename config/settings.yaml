@@ -83,7 +83,7 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "multitalk"                  # "multitalk", "sadtalker", "wav2lip", "simple", "auto"
+  provider: "sadtalker_hf"               # "sadtalker_hf", "multitalk", "sadtalker", "wav2lip", "simple", "auto"
 
   default_image: "news_anchor.png"       # Reuse current affairs avatar
 
@@ -94,7 +94,7 @@ avatar:
     execution_mode: "hf_space"           # "hf_space" (free API) or "local" (needs CUDA GPU)
 
     # HuggingFace Space settings (free, no GPU needed)
-    hf_space_id: "pravatdey/Meigen-MultiTalk"
+    hf_space_id: "fffiloni/Meigen-MultiTalk"
     hf_sample_steps: 12                  # Sampling steps for HF Space (12 = fast default)
 
     # Local mode settings (only used when execution_mode: "local")
@@ -113,6 +113,22 @@ avatar:
     num_gpus: 1                          # Number of GPUs for inference
 
     prompt: "A professional Indian male teacher is speaking directly to the camera in a studio setting. He maintains eye contact, has natural head movements, and speaks with clear lip movements synchronized to the audio. The background is clean and professional."
+
+  # SadTalker HF Space - Free lip-sync via HuggingFace API
+  # HF Space: https://huggingface.co/spaces/vinthony/SadTalker
+  # Free, no GPU needed. Auto-chunks long audio into 30s segments.
+  sadtalker_hf:
+    hf_space_id: "vinthony/SadTalker"
+    preprocess: "crop"                   # crop, resize, full, extcrop, extfull
+    size_of_image: 512                   # 256 or 512
+    still_mode: true                     # Less head movement (teacher style)
+    enhancer: true                       # GFPGAN face enhancement
+    pose_style: 0                        # 0-45
+    exp_weight: 1.0                      # Expression scale (0-3)
+    batch_size: 1
+    facerender: "facevid2vid"            # facevid2vid or pirender
+    blink_every: true
+    max_chunk_seconds: 30.0              # Chunk audio for free ZeroGPU quota
 
   sadtalker:
     preprocess: "crop"

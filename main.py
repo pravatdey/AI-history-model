@@ -96,6 +96,7 @@ class HistoryPipeline:
             method=avatar_config.get("provider", "auto"),
             avatar_image=avatar_config.get("default_image", None),
             multitalk_config=avatar_config.get("multitalk", {}),
+            sadtalker_hf_config=avatar_config.get("sadtalker_hf", {}),
         )
 
         # Initialize video composer
