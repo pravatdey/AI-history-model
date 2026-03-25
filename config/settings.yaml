@@ -83,7 +83,7 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "sadtalker_hf"               # "sadtalker_hf", "multitalk", "sadtalker", "wav2lip", "simple", "auto"
+  provider: "multitalk"                   # "sadtalker_hf", "multitalk", "sadtalker", "wav2lip", "simple", "auto"
 
   default_image: "news_anchor.png"       # Reuse current affairs avatar
 
@@ -96,6 +96,9 @@ avatar:
     # HuggingFace Space settings (free, no GPU needed)
     hf_space_id: "fffiloni/Meigen-MultiTalk"
     hf_sample_steps: 12                  # Sampling steps for HF Space (12 = fast default)
+    max_chunk_seconds: 60                # Max audio per HF Space call (60s safe limit)
+    max_retries: 3                       # Retry failed chunks before giving up
+    retry_delay: 10                      # Seconds between retries
 
     # Local mode settings (only used when execution_mode: "local")
     path: ""                             # Set MULTITALK_PATH env var or path here

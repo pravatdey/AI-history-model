@@ -472,6 +472,9 @@ class AvatarGenerator:
                 audio_guide_scale=self._multitalk_config.get("audio_guide_scale", 4.0),
                 low_vram=self._multitalk_config.get("low_vram", False),
                 num_gpus=self._multitalk_config.get("num_gpus", 1),
+                max_chunk_seconds=self._multitalk_config.get("max_chunk_seconds", 60.0),
+                max_retries=self._multitalk_config.get("max_retries", 3),
+                retry_delay=self._multitalk_config.get("retry_delay", 10.0),
                 prompt_template=self._multitalk_config.get("prompt", (
                     "A professional Indian male teacher is speaking directly to the camera "
                     "in a studio setting. He maintains eye contact, has natural head movements, "
@@ -648,16 +651,14 @@ class AvatarGenerator:
             raise Exception(result.get("error", "MultiTalk generation failed"))
 
         except Exception as e:
-            logger.error(f"MultiTalk generation failed: {e}")
-            logger.info("Falling back to next available method")
-            # Fallback chain: sadtalker_hf -> sadtalker -> wav2lip -> simple
-            if "sadtalker_hf" in self.available_methods:
-                return self._generate_sadtalker_hf(audio_path, output_path, avatar_image)
-            elif "sadtalker" in self.available_methods:
-                return self._generate_sadtalker(audio_path, output_path, avatar_image)
-            elif "wav2lip" in self.available_methods:
-                return self._generate_wav2lip(audio_path, output_path, avatar_image)
-            return self._generate_simple(audio_path, output_path, avatar_image)
+            logger.error(f"MultiTalk generation failed after all retries: {e}")
+            return AvatarResult(
+                success=False,
+                video_path="",
+                duration=0,
+                method="multitalk",
+                error=str(e),
+            )
 
     def _generate_sadtalker_hf(
         self,

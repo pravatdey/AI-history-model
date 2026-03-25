@@ -11,6 +11,7 @@ GitHub: https://github.com/MeiGen-AI/MultiTalk
 HF Space: https://huggingface.co/spaces/fffiloni/Meigen-MultiTalk
 """
 
+import math
 import os
 import json
 import shutil
@@ -32,7 +33,7 @@ class MultiTalkConfig:
     execution_mode: str = "hf_space"
 
     # HuggingFace Space settings
-    hf_space_id: str = "pravatdey/Meigen-MultiTalk"
+    hf_space_id: str = "fffiloni/Meigen-MultiTalk"
     hf_sample_steps: int = 12            # Default for the Space (fast)
 
     # Local mode settings
@@ -49,6 +50,11 @@ class MultiTalkConfig:
     audio_guide_scale: float = 4.0
     low_vram: bool = False
     num_gpus: int = 1
+
+    # Chunking settings for long audio
+    max_chunk_seconds: float = 60.0       # Max audio per HF Space call (~60s safe)
+    max_retries: int = 3                  # Retry failed chunks
+    retry_delay: float = 10.0             # Seconds between retries
 
     prompt_template: str = (
         "A professional Indian male teacher is speaking directly to the camera "
@@ -141,13 +147,138 @@ class MultiTalkEngine:
                 err = "MultiTalk local mode not available. Check paths and GPU."
             return {"success": False, "video_path": "", "duration": 0, "error": err}
 
+        # Check audio duration for chunking
+        audio_duration = self._get_audio_duration(audio_path)
+
+        if self.config.execution_mode == "hf_space" and audio_duration > self.config.max_chunk_seconds:
+            return self._generate_chunked(audio_path, image_path, output_path, prompt, audio_duration)
+
         if self.config.execution_mode == "hf_space":
-            return self._generate_via_hf_space(audio_path, image_path, output_path, prompt)
+            return self._generate_via_hf_space_with_retry(audio_path, image_path, output_path, prompt)
         return self._generate_local(audio_path, image_path, output_path, prompt)
 
     # ──────────────────────────────────────────────────────────────────────
-    #  HuggingFace Space API mode (free, no GPU)
+    #  HuggingFace Space API mode - retry + chunking (free, no GPU)
     # ──────────────────────────────────────────────────────────────────────
+
+    def _generate_via_hf_space_with_retry(
+        self,
+        audio_path: str,
+        image_path: str,
+        output_path: str,
+        prompt: Optional[str] = None,
+    ) -> dict:
+        """Generate video via HF Space with retries on failure."""
+        last_error = ""
+        for attempt in range(1, self.config.max_retries + 1):
+            logger.info(f"MultiTalk HF Space attempt {attempt}/{self.config.max_retries}")
+            result = self._generate_via_hf_space(audio_path, image_path, output_path, prompt)
+            if result["success"]:
+                return result
+            last_error = result.get("error", "Unknown error")
+            logger.warning(f"Attempt {attempt} failed: {last_error}")
+            if attempt < self.config.max_retries:
+                logger.info(f"Retrying in {self.config.retry_delay:.0f}s...")
+                time.sleep(self.config.retry_delay)
+
+        return {
+            "success": False, "video_path": "", "duration": 0,
+            "error": f"MultiTalk failed after {self.config.max_retries} retries: {last_error}",
+        }
+
+    def _generate_chunked(
+        self,
+        audio_path: str,
+        image_path: str,
+        output_path: str,
+        prompt: Optional[str] = None,
+        total_duration: float = 0,
+    ) -> dict:
+        """Split long audio into chunks, generate video for each, concatenate."""
+        chunk_dur = self.config.max_chunk_seconds
+        n_chunks = math.ceil(total_duration / chunk_dur)
+
+        logger.info(
+            f"MultiTalk chunked generation: {total_duration:.1f}s audio -> "
+            f"{n_chunks} chunks of {chunk_dur:.0f}s"
+        )
+
+        tmp_dir = Path(output_path).parent / "_multitalk_chunks"
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+
+        chunk_videos = []
+        failed_chunks = []
+
+        try:
+            for i in range(n_chunks):
+                start = i * chunk_dur
+                end = min(start + chunk_dur, total_duration)
+                chunk_audio = str(tmp_dir / f"chunk_{i:04d}.wav")
+                chunk_video = str(tmp_dir / f"chunk_{i:04d}.mp4")
+
+                # Extract audio chunk
+                if not self._extract_audio_chunk(audio_path, chunk_audio, start, end):
+                    logger.error(f"Failed to extract audio chunk {i}")
+                    failed_chunks.append(i)
+                    continue
+
+                logger.info(
+                    f"Generating chunk {i + 1}/{n_chunks} "
+                    f"({start:.1f}s - {end:.1f}s)"
+                )
+
+                # Generate with retry for each chunk
+                result = self._generate_via_hf_space_with_retry(
+                    chunk_audio, image_path, chunk_video, prompt
+                )
+
+                if result["success"]:
+                    chunk_videos.append(chunk_video)
+                    logger.info(f"Chunk {i + 1}/{n_chunks} complete")
+                else:
+                    logger.warning(f"Chunk {i + 1} failed: {result['error']}")
+                    failed_chunks.append(i)
+
+            if not chunk_videos:
+                return {
+                    "success": False, "video_path": "", "duration": 0,
+                    "error": "All MultiTalk chunks failed to generate",
+                }
+
+            if failed_chunks:
+                logger.warning(
+                    f"{len(failed_chunks)}/{n_chunks} chunks failed. "
+                    f"Proceeding with {len(chunk_videos)} successful chunks."
+                )
+
+            # Concatenate all chunk videos
+            logger.info(f"Concatenating {len(chunk_videos)} video chunks...")
+            if not self._concatenate_videos(chunk_videos, output_path):
+                return {
+                    "success": False, "video_path": "", "duration": 0,
+                    "error": "Failed to concatenate video chunks",
+                }
+
+            # Re-attach original audio for perfect sync
+            self._replace_audio(output_path, audio_path)
+
+            duration = self._get_video_duration(output_path)
+            logger.info(
+                f"MultiTalk chunked video complete: {output_path} ({duration:.1f}s)"
+            )
+
+            return {
+                "success": True,
+                "video_path": output_path,
+                "duration": duration,
+                "error": None,
+            }
+
+        finally:
+            try:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+            except Exception:
+                pass
 
     def _generate_via_hf_space(
         self,
@@ -410,6 +541,19 @@ class MultiTalkEngine:
 
         return None
 
+    def _get_audio_duration(self, audio_path: str) -> float:
+        """Get audio duration in seconds using ffprobe."""
+        try:
+            result = subprocess.run(
+                ["ffprobe", "-v", "error",
+                 "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", audio_path],
+                capture_output=True, text=True, timeout=30,
+            )
+            return float(result.stdout.strip())
+        except Exception:
+            return 0.0
+
     def _get_video_duration(self, video_path: str) -> float:
         """Get video duration in seconds using ffprobe."""
         try:
@@ -422,3 +566,82 @@ class MultiTalkEngine:
             return float(result.stdout.strip())
         except Exception:
             return 0.0
+
+    def _extract_audio_chunk(
+        self, audio_path: str, output_path: str, start: float, end: float
+    ) -> bool:
+        """Extract a chunk of audio using ffmpeg."""
+        try:
+            duration = end - start
+            subprocess.run(
+                [
+                    "ffmpeg", "-y",
+                    "-i", audio_path,
+                    "-ss", str(start),
+                    "-t", str(duration),
+                    "-acodec", "pcm_s16le",
+                    "-ar", "16000",
+                    "-ac", "1",
+                    output_path,
+                ],
+                capture_output=True, check=True, timeout=60,
+            )
+            return Path(output_path).exists()
+        except Exception as e:
+            logger.error(f"Audio chunk extraction failed: {e}")
+            return False
+
+    def _concatenate_videos(self, video_paths: list, output_path: str) -> bool:
+        """Concatenate video files using ffmpeg concat demuxer."""
+        try:
+            list_file = Path(output_path).parent / "_multitalk_concat_list.txt"
+            with open(list_file, "w") as f:
+                for vp in video_paths:
+                    safe_path = str(Path(vp).resolve()).replace("\\", "/")
+                    f.write(f"file '{safe_path}'\n")
+
+            subprocess.run(
+                [
+                    "ffmpeg", "-y",
+                    "-f", "concat",
+                    "-safe", "0",
+                    "-i", str(list_file),
+                    "-c", "copy",
+                    output_path,
+                ],
+                capture_output=True, check=True, timeout=300,
+            )
+
+            list_file.unlink(missing_ok=True)
+            return Path(output_path).exists()
+        except Exception as e:
+            logger.error(f"Video concatenation failed: {e}")
+            return False
+
+    def _replace_audio(self, video_path: str, audio_path: str) -> bool:
+        """Replace video audio track with original audio for perfect sync."""
+        try:
+            tmp_out = video_path + ".tmp.mp4"
+            subprocess.run(
+                [
+                    "ffmpeg", "-y",
+                    "-i", video_path,
+                    "-i", audio_path,
+                    "-c:v", "copy",
+                    "-map", "0:v:0",
+                    "-map", "1:a:0",
+                    "-shortest",
+                    tmp_out,
+                ],
+                capture_output=True, check=True, timeout=120,
+            )
+            shutil.move(tmp_out, video_path)
+            return True
+        except Exception as e:
+            logger.error(f"Audio replacement failed: {e}")
+            if Path(video_path + ".tmp.mp4").exists():
+                try:
+                    os.remove(video_path + ".tmp.mp4")
+                except OSError:
+                    pass
+            return False
