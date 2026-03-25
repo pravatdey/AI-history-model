@@ -29,7 +29,7 @@ languages:
   supported:
     - code: "hi"
       name: "Hinglish"
-      tts_voice: "hi-IN-MadhurNeural"   # Natural Indian male voice
+      tts_voice: "hi-IN-MadhurNeural"      # Free Edge TTS - Indian Hindi male voice
       tts_rate: "-8%"                    # Slightly slower for natural conversational feel
       tts_pitch: "-2Hz"                  # Slightly deeper for authoritative tone
 
@@ -83,9 +83,36 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "sadtalker"
+  provider: "multitalk"                  # "multitalk", "sadtalker", "wav2lip", "simple", "auto"
 
   default_image: "news_anchor.png"       # Reuse current affairs avatar
+
+  # MeiGen MultiTalk - Best quality lip-sync (NeurIPS 2025)
+  # GitHub: https://github.com/MeiGen-AI/MultiTalk
+  # Two modes: "hf_space" (free, no GPU) or "local" (requires CUDA GPU)
+  multitalk:
+    execution_mode: "hf_space"           # "hf_space" (free API) or "local" (needs CUDA GPU)
+
+    # HuggingFace Space settings (free, no GPU needed)
+    hf_space_id: "fffiloni/Meigen-MultiTalk"
+    hf_sample_steps: 12                  # Sampling steps for HF Space (12 = fast default)
+
+    # Local mode settings (only used when execution_mode: "local")
+    path: ""                             # Set MULTITALK_PATH env var or path here
+    ckpt_dir: ""                         # Path to Wan2.1-I2V-14B-480P weights
+    wav2vec_dir: ""                      # Path to chinese-wav2vec2-base weights
+    size: "multitalk-480"                # "multitalk-480" or "multitalk-720"
+    mode: "streaming"                    # "streaming" (long video) or "clip" (short)
+    sample_steps: 40                     # Sampling steps (reduce to 10 for speed)
+    use_teacache: true                   # TeaCache acceleration (~2-3x speedup)
+    teacache_thresh: 0.3                 # Acceleration coefficient (0.2-0.5 optimal)
+    use_apg: false                       # Reduce color inconsistency in long videos
+    text_guide_scale: 5.0                # Text guidance scale
+    audio_guide_scale: 4.0               # Audio guidance scale (3-5 for lip sync)
+    low_vram: false                      # Enable for single RTX 4090 (480P)
+    num_gpus: 1                          # Number of GPUs for inference
+
+    prompt: "A professional Indian male teacher is speaking directly to the camera in a studio setting. He maintains eye contact, has natural head movements, and speaks with clear lip movements synchronized to the audio. The background is clean and professional."
 
   sadtalker:
     preprocess: "crop"

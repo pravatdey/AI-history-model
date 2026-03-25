@@ -24,6 +24,7 @@ scipy>=1.11.0
 librosa>=0.10.0
 imageio>=2.31.0
 imageio-ffmpeg>=0.4.8
+gradio_client>=1.0.0
 
 # Video Processing
 moviepy==1.0.3

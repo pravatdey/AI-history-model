@@ -90,8 +90,13 @@ class HistoryPipeline:
         # Initialize TTS manager
         self.tts_manager = TTSManager(config_path=config_path)
 
-        # Initialize avatar generator
-        self.avatar_generator = AvatarGenerator()
+        # Initialize avatar generator with config
+        avatar_config = self.config.get("avatar", {})
+        self.avatar_generator = AvatarGenerator(
+            method=avatar_config.get("provider", "auto"),
+            avatar_image=avatar_config.get("default_image", None),
+            multitalk_config=avatar_config.get("multitalk", {}),
+        )
 
         # Initialize video composer
         self.video_composer = VideoComposer(config_path=config_path)
@@ -640,9 +645,9 @@ Examples:
     )
 
     parser.add_argument(
-        "--test",
+        "--test", "--private",
         action="store_true",
-        help="Test mode - upload as private video"
+        help="Private mode - upload as private video (for testing/review)"
     )
 
     parser.add_argument(

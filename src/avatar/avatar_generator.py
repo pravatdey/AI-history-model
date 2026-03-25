@@ -409,21 +409,28 @@ class AvatarGenerator:
         method: str = "auto",
         avatar_image: str = None,
         sadtalker_path: str = None,
-        wav2lip_path: str = None
+        wav2lip_path: str = None,
+        multitalk_config: dict = None
     ):
         """
         Initialize avatar generator.
 
         Args:
-            method: Generation method ("sadtalker", "wav2lip", "simple", "auto")
+            method: Generation method ("multitalk", "sadtalker", "wav2lip", "simple", "auto")
             avatar_image: Path to default avatar image
             sadtalker_path: Path to SadTalker installation
             wav2lip_path: Path to Wav2Lip installation
+            multitalk_config: Dict of MultiTalk configuration options
         """
         self.method = method
         self.avatar_image = avatar_image or "assets/avatars/news_anchor.png"
         self.sadtalker_path = sadtalker_path or os.getenv("SADTALKER_PATH", "")
         self.wav2lip_path = wav2lip_path or os.getenv("WAV2LIP_PATH", "")
+
+        # Initialize MultiTalk engine
+        self._multitalk_engine = None
+        self._multitalk_config = multitalk_config or {}
+        self._init_multitalk()
 
         # Detect available methods
         self.available_methods = self._detect_methods()
@@ -437,9 +444,45 @@ class AvatarGenerator:
 
         logger.info(f"AvatarGenerator initialized: method={self.method}, available={self.available_methods}")
 
+    def _init_multitalk(self):
+        """Initialize the MultiTalk engine if configured."""
+        try:
+            from src.avatar.multitalk_engine import MultiTalkEngine, MultiTalkConfig
+            config = MultiTalkConfig(
+                execution_mode=self._multitalk_config.get("execution_mode", "hf_space"),
+                hf_space_id=self._multitalk_config.get("hf_space_id", "fffiloni/Meigen-MultiTalk"),
+                hf_sample_steps=self._multitalk_config.get("hf_sample_steps", 12),
+                multitalk_path=self._multitalk_config.get("path", os.getenv("MULTITALK_PATH", "")),
+                ckpt_dir=self._multitalk_config.get("ckpt_dir", ""),
+                wav2vec_dir=self._multitalk_config.get("wav2vec_dir", ""),
+                size=self._multitalk_config.get("size", "multitalk-480"),
+                mode=self._multitalk_config.get("mode", "streaming"),
+                sample_steps=self._multitalk_config.get("sample_steps", 40),
+                use_teacache=self._multitalk_config.get("use_teacache", True),
+                teacache_thresh=self._multitalk_config.get("teacache_thresh", 0.3),
+                use_apg=self._multitalk_config.get("use_apg", False),
+                text_guide_scale=self._multitalk_config.get("text_guide_scale", 5.0),
+                audio_guide_scale=self._multitalk_config.get("audio_guide_scale", 4.0),
+                low_vram=self._multitalk_config.get("low_vram", False),
+                num_gpus=self._multitalk_config.get("num_gpus", 1),
+                prompt_template=self._multitalk_config.get("prompt", (
+                    "A professional Indian male teacher is speaking directly to the camera "
+                    "in a studio setting. He maintains eye contact, has natural head movements, "
+                    "and speaks with clear lip movements synchronized to the audio. "
+                    "The background is clean and professional."
+                )),
+            )
+            self._multitalk_engine = MultiTalkEngine(config)
+        except Exception as e:
+            logger.debug(f"MultiTalk engine init skipped: {e}")
+
     def _detect_methods(self) -> list:
         """Detect which generation methods are available"""
         available = ["simple"]  # Always available
+
+        # Check for MultiTalk (highest quality)
+        if self._multitalk_engine and self._multitalk_engine.is_available():
+            available.append("multitalk")
 
         # Check for SadTalker
         if self._check_sadtalker():
@@ -476,7 +519,9 @@ class AvatarGenerator:
 
     def _select_best_method(self) -> str:
         """Select the best available method"""
-        if "sadtalker" in self.available_methods:
+        if "multitalk" in self.available_methods:
+            return "multitalk"
+        elif "sadtalker" in self.available_methods:
             return "sadtalker"
         elif "wav2lip" in self.available_methods:
             return "wav2lip"
@@ -532,11 +577,47 @@ class AvatarGenerator:
         logger.info(f"Generating avatar video: method={method}")
 
         # Generate based on method
-        if method == "sadtalker" and "sadtalker" in self.available_methods:
+        if method == "multitalk" and "multitalk" in self.available_methods:
+            return self._generate_multitalk(audio_path, output_path, avatar_image)
+        elif method == "sadtalker" and "sadtalker" in self.available_methods:
             return self._generate_sadtalker(audio_path, output_path, avatar_image)
         elif method == "wav2lip" and "wav2lip" in self.available_methods:
             return self._generate_wav2lip(audio_path, output_path, avatar_image)
         else:
+            return self._generate_simple(audio_path, output_path, avatar_image)
+
+    def _generate_multitalk(
+        self,
+        audio_path: str,
+        output_path: str,
+        avatar_image: str
+    ) -> AvatarResult:
+        """Generate video using MeiGen MultiTalk (best quality lip-sync)."""
+        try:
+            result = self._multitalk_engine.generate(
+                audio_path=audio_path,
+                image_path=avatar_image,
+                output_path=output_path,
+            )
+
+            if result["success"]:
+                return AvatarResult(
+                    success=True,
+                    video_path=result["video_path"],
+                    duration=result["duration"],
+                    method="multitalk",
+                )
+
+            raise Exception(result.get("error", "MultiTalk generation failed"))
+
+        except Exception as e:
+            logger.error(f"MultiTalk generation failed: {e}")
+            logger.info("Falling back to next available method")
+            # Fallback chain: sadtalker -> wav2lip -> simple
+            if "sadtalker" in self.available_methods:
+                return self._generate_sadtalker(audio_path, output_path, avatar_image)
+            elif "wav2lip" in self.available_methods:
+                return self._generate_wav2lip(audio_path, output_path, avatar_image)
             return self._generate_simple(audio_path, output_path, avatar_image)
 
     def _generate_sadtalker(
