@@ -32,7 +32,7 @@ class MultiTalkConfig:
     execution_mode: str = "hf_space"
 
     # HuggingFace Space settings
-    hf_space_id: str = "fffiloni/Meigen-MultiTalk"
+    hf_space_id: str = "pravatdey/Meigen-MultiTalk"
     hf_sample_steps: int = 12            # Default for the Space (fast)
 
     # Local mode settings

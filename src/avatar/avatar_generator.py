@@ -410,19 +410,17 @@ class AvatarGenerator:
         avatar_image: str = None,
         sadtalker_path: str = None,
         wav2lip_path: str = None,
-        multitalk_config: dict = None,
-        echomimic_config: dict = None
+        multitalk_config: dict = None
     ):
         """
         Initialize avatar generator.
 
         Args:
-            method: Generation method ("multitalk", "echomimic", "sadtalker", "wav2lip", "simple", "auto")
+            method: Generation method ("multitalk", "sadtalker", "wav2lip", "simple", "auto")
             avatar_image: Path to default avatar image
             sadtalker_path: Path to SadTalker installation
             wav2lip_path: Path to Wav2Lip installation
             multitalk_config: Dict of MultiTalk configuration options
-            echomimic_config: Dict of EchoMimic configuration options
         """
         self.method = method
         self.avatar_image = avatar_image or "assets/avatars/news_anchor.png"
@@ -433,11 +431,6 @@ class AvatarGenerator:
         self._multitalk_engine = None
         self._multitalk_config = multitalk_config or {}
         self._init_multitalk()
-
-        # Initialize EchoMimic engine
-        self._echomimic_engine = None
-        self._echomimic_config = echomimic_config or {}
-        self._init_echomimic()
 
         # Detect available methods
         self.available_methods = self._detect_methods()
@@ -457,7 +450,7 @@ class AvatarGenerator:
             from src.avatar.multitalk_engine import MultiTalkEngine, MultiTalkConfig
             config = MultiTalkConfig(
                 execution_mode=self._multitalk_config.get("execution_mode", "hf_space"),
-                hf_space_id=self._multitalk_config.get("hf_space_id", "fffiloni/Meigen-MultiTalk"),
+                hf_space_id=self._multitalk_config.get("hf_space_id", "pravatdey/Meigen-MultiTalk"),
                 hf_sample_steps=self._multitalk_config.get("hf_sample_steps", 12),
                 multitalk_path=self._multitalk_config.get("path", os.getenv("MULTITALK_PATH", "")),
                 ckpt_dir=self._multitalk_config.get("ckpt_dir", ""),
@@ -483,31 +476,6 @@ class AvatarGenerator:
         except Exception as e:
             logger.debug(f"MultiTalk engine init skipped: {e}")
 
-    def _init_echomimic(self):
-        """Initialize the EchoMimic engine if configured."""
-        try:
-            from src.avatar.echomimic_engine import EchoMimicEngine, EchoMimicConfig
-            echomimic_cfg = self._echomimic_config
-            config = EchoMimicConfig(
-                hf_space_id=echomimic_cfg.get("hf_space_id", "fffiloni/EchoMimic"),
-                width=echomimic_cfg.get("width", 512),
-                height=echomimic_cfg.get("height", 512),
-                fps=echomimic_cfg.get("fps", 24),
-                seed=echomimic_cfg.get("seed", 420),
-                facemask_dilation_ratio=echomimic_cfg.get("facemask_dilation_ratio", 0.1),
-                facecrop_dilation_ratio=echomimic_cfg.get("facecrop_dilation_ratio", 0.5),
-                context_frames=echomimic_cfg.get("context_frames", 12),
-                context_overlap=echomimic_cfg.get("context_overlap", 3),
-                cfg=echomimic_cfg.get("cfg", 2.5),
-                steps=echomimic_cfg.get("steps", 30),
-                sample_rate=echomimic_cfg.get("sample_rate", 16000),
-                max_chunk_seconds=echomimic_cfg.get("max_chunk_seconds", 5.0),
-                chunk_overlap_seconds=echomimic_cfg.get("chunk_overlap_seconds", 0.2),
-            )
-            self._echomimic_engine = EchoMimicEngine(config)
-        except Exception as e:
-            logger.debug(f"EchoMimic engine init skipped: {e}")
-
     def _detect_methods(self) -> list:
         """Detect which generation methods are available"""
         available = ["simple"]  # Always available
@@ -515,10 +483,6 @@ class AvatarGenerator:
         # Check for MultiTalk (highest quality)
         if self._multitalk_engine and self._multitalk_engine.is_available():
             available.append("multitalk")
-
-        # Check for EchoMimic (fallback for MultiTalk)
-        if self._echomimic_engine and self._echomimic_engine.is_available():
-            available.append("echomimic")
 
         # Check for SadTalker
         if self._check_sadtalker():
@@ -557,8 +521,6 @@ class AvatarGenerator:
         """Select the best available method"""
         if "multitalk" in self.available_methods:
             return "multitalk"
-        elif "echomimic" in self.available_methods:
-            return "echomimic"
         elif "sadtalker" in self.available_methods:
             return "sadtalker"
         elif "wav2lip" in self.available_methods:
@@ -617,8 +579,6 @@ class AvatarGenerator:
         # Generate based on method
         if method == "multitalk" and "multitalk" in self.available_methods:
             return self._generate_multitalk(audio_path, output_path, avatar_image)
-        elif method == "echomimic" and "echomimic" in self.available_methods:
-            return self._generate_echomimic(audio_path, output_path, avatar_image)
         elif method == "sadtalker" and "sadtalker" in self.available_methods:
             return self._generate_sadtalker(audio_path, output_path, avatar_image)
         elif method == "wav2lip" and "wav2lip" in self.available_methods:
@@ -652,42 +612,6 @@ class AvatarGenerator:
 
         except Exception as e:
             logger.error(f"MultiTalk generation failed: {e}")
-            logger.info("Falling back to next available method")
-            # Fallback chain: echomimic -> sadtalker -> wav2lip -> simple
-            if "echomimic" in self.available_methods:
-                return self._generate_echomimic(audio_path, output_path, avatar_image)
-            elif "sadtalker" in self.available_methods:
-                return self._generate_sadtalker(audio_path, output_path, avatar_image)
-            elif "wav2lip" in self.available_methods:
-                return self._generate_wav2lip(audio_path, output_path, avatar_image)
-            return self._generate_simple(audio_path, output_path, avatar_image)
-
-    def _generate_echomimic(
-        self,
-        audio_path: str,
-        output_path: str,
-        avatar_image: str
-    ) -> AvatarResult:
-        """Generate video using EchoMimic (lip-sync via HF Space with chunking)."""
-        try:
-            result = self._echomimic_engine.generate(
-                audio_path=audio_path,
-                image_path=avatar_image,
-                output_path=output_path,
-            )
-
-            if result["success"]:
-                return AvatarResult(
-                    success=True,
-                    video_path=result["video_path"],
-                    duration=result["duration"],
-                    method="echomimic",
-                )
-
-            raise Exception(result.get("error", "EchoMimic generation failed"))
-
-        except Exception as e:
-            logger.error(f"EchoMimic generation failed: {e}")
             logger.info("Falling back to next available method")
             # Fallback chain: sadtalker -> wav2lip -> simple
             if "sadtalker" in self.available_methods:
