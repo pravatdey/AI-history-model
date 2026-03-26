@@ -155,14 +155,18 @@ class MoDAEngine:
                 driving_audio_path=handle_file(os.path.abspath(wav_audio)),
                 emotion_name=self.config.emotion,
                 cfg_scale=self.config.cfg_scale,
-                api_name="/predict",
+                api_name="/generate_motion",
             )
 
             elapsed = time.time() - start_time
             logger.info(f"MoDA generation completed in {elapsed:.0f}s")
 
-            # Result is the path to generated video
-            video_file = str(result) if result else ""
+            # Result is a dict with 'video' key containing the filepath
+            video_file = ""
+            if isinstance(result, dict):
+                video_file = str(result.get("video", ""))
+            elif result:
+                video_file = str(result)
 
             if not video_file or not Path(video_file).exists():
                 return {
