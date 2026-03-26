@@ -464,6 +464,7 @@ class AvatarGenerator:
             from src.avatar.moda_engine import MoDAEngine, MoDAConfig
             config = MoDAConfig(
                 hf_space_id=self._moda_config.get("hf_space_id", "multimodalart/MoDA-fast-talking-head"),
+                hf_token=self._moda_config.get("hf_token", ""),
                 emotion=self._moda_config.get("emotion", "None"),
                 cfg_scale=self._moda_config.get("cfg_scale", 1.2),
                 max_chunk_seconds=self._moda_config.get("max_chunk_seconds", 30.0),

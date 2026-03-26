@@ -26,6 +26,7 @@ logger = get_logger(__name__)
 class MoDAConfig:
     """Configuration for MoDA HF Space generation."""
     hf_space_id: str = "multimodalart/MoDA-fast-talking-head"
+    hf_token: str = ""           # HF Pro token for priority GPU access
 
     # MoDA settings
     emotion: str = "None"        # Anger, Contempt, Disgust, Fear, Happiness, Neutral, Sadness, Surprise, None
@@ -131,8 +132,9 @@ class MoDAEngine:
         try:
             from gradio_client import Client, handle_file
 
-            logger.info(f"Connecting to MoDA HF Space: {self.config.hf_space_id}")
-            client = Client(self.config.hf_space_id)
+            hf_token = self.config.hf_token or os.environ.get("HF_TOKEN", "")
+            logger.info(f"Connecting to MoDA HF Space: {self.config.hf_space_id} (auth={'yes' if hf_token else 'no'})")
+            client = Client(self.config.hf_space_id, hf_token=hf_token or None)
 
             # Ensure audio is WAV
             wav_audio = self._ensure_wav(audio_path)

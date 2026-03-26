@@ -92,6 +92,7 @@ avatar:
   # Free ZeroGPU, excellent lip sync + emotion control
   moda:
     hf_space_id: "multimodalart/MoDA-fast-talking-head"
+    hf_token: ""                           # Set HF_TOKEN env var or paste here (HF Pro = priority GPU)
     emotion: "None"                        # Anger, Contempt, Disgust, Fear, Happiness, Neutral, Sadness, Surprise, None
     cfg_scale: 1.2                         # Guidance scale (1.0-3.0)
     max_chunk_seconds: 30                  # ZeroGPU 120s timeout, 30s audio is safe
