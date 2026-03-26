@@ -10,9 +10,9 @@ app:
 
 # Video Settings
 video:
-  duration_target: 5            # Target 5 minutes per class (testing)
-  duration_min: 3              # Minimum video duration in minutes
-  duration_max: 7              # Maximum video duration in minutes
+  duration_target: 2            # Target 2 minutes per class
+  duration_min: 2              # Minimum video duration in minutes
+  duration_max: 3              # Maximum video duration in minutes
   resolution:
     width: 1280
     height: 720
