@@ -113,6 +113,10 @@ class MoDAEngine:
                 return result
             last_error = result.get("error", "Unknown error")
             logger.warning(f"Attempt {attempt} failed: {last_error}")
+            # Don't retry on quota errors — fallback immediately
+            if "GPU quota" in last_error or "exceeded" in last_error.lower():
+                logger.warning("GPU quota exceeded — skipping retries")
+                break
             if attempt < self.config.max_retries:
                 logger.info(f"Retrying in {self.config.retry_delay:.0f}s...")
                 time.sleep(self.config.retry_delay)
