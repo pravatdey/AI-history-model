@@ -134,7 +134,7 @@ class MoDAEngine:
 
             hf_token = self.config.hf_token or os.environ.get("HF_TOKEN", "")
             logger.info(f"Connecting to MoDA HF Space: {self.config.hf_space_id} (auth={'yes' if hf_token else 'no'})")
-            client = Client(self.config.hf_space_id, hf_token=hf_token or None)
+            client = Client(self.config.hf_space_id, token=hf_token or None)
 
             # Ensure audio is WAV
             wav_audio = self._ensure_wav(audio_path)
