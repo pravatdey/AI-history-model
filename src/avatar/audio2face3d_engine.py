@@ -309,7 +309,7 @@ class Audio2Face3DEngine:
         for attempt in range(1, self.config.max_retries + 1):
             try:
                 logger.info(f"A2F-3D API attempt {attempt}/{self.config.max_retries}")
-                csv_path = asyncio.run(self._async_get_blendshapes(wav_path))
+                csv_path = self._run_async(self._async_get_blendshapes(wav_path))
                 if csv_path and Path(csv_path).exists():
                     return csv_path
             except Exception as e:
@@ -318,6 +318,22 @@ class Audio2Face3DEngine:
                     time.sleep(self.config.retry_delay)
 
         return None
+
+    def _run_async(self, coro):
+        """Run an async coroutine, handling the case where an event loop is already running."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            # Event loop already running — create a new thread to run the coroutine
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                future = pool.submit(asyncio.run, coro)
+                return future.result(timeout=300)
+        else:
+            return asyncio.run(coro)
 
     async def _async_get_blendshapes(self, wav_path: str) -> Optional[str]:
         """Async gRPC call to Audio2Face-3D API."""
