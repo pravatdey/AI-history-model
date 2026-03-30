@@ -206,7 +206,8 @@ class IndicParlerTTSEngine(BaseTTS):
                                     if isinstance(data, list) and len(data) > 0:
                                         audio_info = data[0]
                                         if isinstance(audio_info, dict):
-                                            file_url = audio_info.get("url") or audio_info.get("path")
+                                            # Prefer "path" — the "url" from Space is often broken
+                                            file_url = audio_info.get("path") or audio_info.get("url")
                                         elif isinstance(audio_info, str):
                                             file_url = audio_info
                                 except (json.JSONDecodeError, TypeError):
@@ -214,7 +215,11 @@ class IndicParlerTTSEngine(BaseTTS):
 
                         if file_url:
                             # Download the audio file
-                            if not file_url.startswith("http"):
+                            # Always construct URL from path — the url field from
+                            # the Space is broken (/gradio_api/c/gradio_api/file=)
+                            if file_url.startswith("/tmp/"):
+                                file_url = f"{base_url}/gradio_api/file={file_url}"
+                            elif not file_url.startswith("http"):
                                 file_url = f"{base_url}/gradio_api/file={file_url}"
                             audio_resp = http.get(file_url)
                             audio_resp.raise_for_status()
