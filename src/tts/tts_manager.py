@@ -12,7 +12,7 @@ from datetime import datetime
 import yaml
 
 from .edge_tts_engine import EdgeTTSEngine
-from .base_tts import TTSResult, TTSVoice
+from .base_tts import BaseTTS, TTSResult, TTSVoice
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -63,7 +63,7 @@ class TTSManager:
             config_path: Path to settings configuration.
         """
         self.config = self._load_config(config_path)
-        self.engine = EdgeTTSEngine()
+        self.engine = self._create_engine()
 
         # Load language configurations
         self.languages = self._load_languages()
@@ -78,6 +78,26 @@ class TTSManager:
         except Exception as e:
             logger.warning(f"Failed to load config: {e}")
             return {}
+
+    def _create_engine(self) -> BaseTTS:
+        """Create TTS engine based on config provider setting."""
+        tts_config = self.config.get("tts", {})
+        provider = tts_config.get("provider", "edge")
+
+        if provider == "indic_parler":
+            from .indic_parler_tts_engine import IndicParlerTTSEngine
+            parler_config = tts_config.get("indic_parler", {})
+            engine = IndicParlerTTSEngine(
+                speaker=parler_config.get("speaker"),
+                language=parler_config.get("language", "hi"),
+                voice_description=parler_config.get("voice_description"),
+                hf_token=parler_config.get("hf_token") or None,
+            )
+            logger.info("Using Indic Parler-TTS engine (natural Indian voice)")
+            return engine
+        else:
+            logger.info("Using Edge TTS engine")
+            return EdgeTTSEngine()
 
     def _load_languages(self) -> Dict[str, Dict[str, Any]]:
         """Load language configurations."""

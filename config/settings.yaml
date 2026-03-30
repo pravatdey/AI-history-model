@@ -65,8 +65,17 @@ script:
 
 # Text-to-Speech Configuration
 tts:
-  provider: "edge"
+  provider: "indic_parler"                # "edge", "indic_parler", "elevenlabs"
   output_format: "mp3"
+
+  # Indic Parler-TTS - Natural Indian voice via HuggingFace (FREE)
+  # HF Space: https://huggingface.co/spaces/ai4bharat/indic-parler-tts
+  # 22 Indian languages, 69 voices, prompt-controllable
+  indic_parler:
+    speaker: "Rohit"                       # Hindi: Rohit, Divya, Aman, Rani | English: Kabir, Priya, Ravi
+    language: "hi"                         # auto-detected from text, but set default
+    hf_token: ""                           # Set HF_TOKEN env var for priority GPU (optional)
+    voice_description: "Rohit speaks with a moderate-pitched voice delivering words at a moderate pace in a close-sounding environment with very clear audio and no background noise. The tone is confident and engaging, like a professional teacher explaining concepts clearly."
 
   edge:
     rate: "-8%"                          # Natural conversational pace
