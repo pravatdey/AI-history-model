@@ -85,7 +85,7 @@ tts:
 avatar:
   provider: "sadtalker_hf"               # "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto"
 
-  default_image: "news_anchor.png"       # Reuse current affairs avatar (used by 2D engines)
+  default_image: "teacher.jpg"            # Indian male teacher avatar (used by 2D engines)
 
   # NVIDIA Audio2Face-3D - 3D Digital Human (best quality, free Cloud API)
   # API: https://build.nvidia.com/nvidia/audio2face-3d/api
