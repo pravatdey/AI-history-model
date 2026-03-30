@@ -24,7 +24,8 @@ scipy>=1.11.0
 librosa>=0.10.0
 imageio>=2.31.0
 imageio-ffmpeg>=0.4.8
-gradio_client>=1.0.0
+gradio_client>=1.0.0,<2.0.0
+httpx>=0.24.0
 
 # NVIDIA Audio2Face-3D (3D Digital Human)
 # NOTE: nvidia-ace must be installed from NVIDIA's GitHub wheel, NOT PyPI:

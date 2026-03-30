@@ -112,19 +112,45 @@ class IndicParlerTTSEngine(BaseTTS):
         )
 
     def _get_client(self):
-        """Lazy-initialize gradio client."""
+        """Lazy-initialize gradio client with fallback for API schema bugs."""
         if self._client is None:
             from gradio_client import Client
-            try:
-                self._client = Client(
-                    self.HF_SPACE_ID,
-                    hf_token=self.hf_token,
-                )
-                logger.info(f"Connected to HF Space: {self.HF_SPACE_ID}")
-            except Exception as e:
-                logger.warning(f"Client init warning (may still work): {e}")
-                # Try without token
-                self._client = Client(self.HF_SPACE_ID)
+            # The HF Space has a Gradio version with a bug in json_schema_to_python_type
+            # that causes TypeError during API info fetch. Try multiple approaches.
+            for attempt, kwargs in enumerate([
+                {"hf_token": self.hf_token},
+                {},  # without token
+            ], 1):
+                try:
+                    self._client = Client(self.HF_SPACE_ID, **kwargs)
+                    logger.info(f"Connected to HF Space: {self.HF_SPACE_ID}")
+                    return self._client
+                except TypeError as e:
+                    if "not iterable" in str(e):
+                        # Gradio schema parsing bug — client may still work for predict
+                        logger.warning(f"API schema parse error (attempt {attempt}), trying raw client")
+                        try:
+                            # Force client creation by skipping API info validation
+                            client = Client.__new__(Client)
+                            client.src = f"https://{self.HF_SPACE_ID.replace('/', '-')}.hf.space"
+                            client.hf_token = kwargs.get("hf_token")
+                            self._client = Client(
+                                self.HF_SPACE_ID,
+                                download_files=False,
+                                **kwargs,
+                            )
+                            logger.info(f"Connected to HF Space (download_files=False)")
+                            return self._client
+                        except Exception:
+                            pass
+                    else:
+                        raise
+                except Exception as e:
+                    logger.warning(f"Client init attempt {attempt} failed: {e}")
+
+            # Final fallback: use httpx directly
+            logger.warning("All gradio_client attempts failed, will use direct HTTP API")
+            self._client = "httpx_fallback"
         return self._client
 
     def _split_text(self, text: str) -> List[str]:
@@ -182,16 +208,21 @@ class IndicParlerTTSEngine(BaseTTS):
                 logger.info(
                     f"Parler-TTS chunk ({len(text)} chars), attempt {attempt}/{self.MAX_RETRIES}"
                 )
-                result = client.predict(
-                    text=text,
-                    description=self.voice_description,
-                    api_name="/generate_finetuned",
-                )
+
+                if client == "httpx_fallback":
+                    result = self._generate_via_httpx(text, output_path)
+                else:
+                    result = client.predict(
+                        text=text,
+                        description=self.voice_description,
+                        api_name="/generate_finetuned",
+                    )
+                    if result and Path(result).exists():
+                        shutil.copy2(result, output_path)
+                        result = output_path
 
                 if result and Path(result).exists():
-                    # Copy to our output path
-                    shutil.copy2(result, output_path)
-                    return output_path
+                    return result
 
             except Exception as e:
                 logger.warning(f"Parler-TTS attempt {attempt} failed: {e}")
@@ -199,6 +230,68 @@ class IndicParlerTTSEngine(BaseTTS):
                     time.sleep(self.RETRY_DELAY)
                     # Reset client on failure
                     self._client = None
+                    client = self._get_client()
+
+        return None
+
+    def _generate_via_httpx(self, text: str, output_path: str) -> Optional[str]:
+        """Fallback: call HF Space Gradio API directly via HTTP."""
+        import httpx
+        import json
+        import hashlib
+
+        base_url = f"https://{self.HF_SPACE_ID.replace('/', '-')}.hf.space"
+        headers = {}
+        if self.hf_token:
+            headers["Authorization"] = f"Bearer {self.hf_token}"
+
+        # Step 1: Get a session hash
+        session_hash = hashlib.md5(f"{time.time()}".encode()).hexdigest()[:12]
+
+        # Step 2: Call the predict endpoint
+        payload = {
+            "data": [text, self.voice_description],
+            "fn_index": 1,  # generate_finetuned
+            "session_hash": session_hash,
+        }
+
+        with httpx.Client(timeout=300, headers=headers) as http:
+            # Queue the request
+            resp = http.post(f"{base_url}/queue/push", json=payload)
+            resp.raise_for_status()
+            event_id = resp.json().get("event_id")
+
+            if not event_id:
+                logger.error("No event_id from queue/push")
+                return None
+
+            # Poll for result
+            for _ in range(120):  # max 10 min polling
+                time.sleep(5)
+                status_resp = http.get(
+                    f"{base_url}/queue/status/{event_id}"
+                )
+                if status_resp.status_code != 200:
+                    continue
+                status_data = status_resp.json()
+
+                if status_data.get("status") == "COMPLETE":
+                    # Get the audio file URL
+                    output = status_data.get("data", {}).get("data", [])
+                    if output and isinstance(output[0], dict):
+                        file_url = output[0].get("url") or output[0].get("path")
+                        if file_url:
+                            if not file_url.startswith("http"):
+                                file_url = f"{base_url}/file={file_url}"
+                            audio_resp = http.get(file_url)
+                            audio_resp.raise_for_status()
+                            with open(output_path, "wb") as f:
+                                f.write(audio_resp.content)
+                            return output_path
+                    return None
+                elif status_data.get("status") == "FAILED":
+                    logger.error(f"HF Space returned FAILED: {status_data}")
+                    return None
 
         return None
 
