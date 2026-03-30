@@ -83,11 +83,26 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "moda"                        # "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto"
+  provider: "audio2face3d"               # "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto"
 
-  default_image: "news_anchor.png"       # Reuse current affairs avatar
+  default_image: "news_anchor.png"       # Reuse current affairs avatar (used by 2D engines)
 
-  # MoDA Fast Talking Head - Best quality realistic avatar (2025)
+  # NVIDIA Audio2Face-3D - 3D Digital Human (best quality, free Cloud API)
+  # API: https://build.nvidia.com/nvidia/audio2face-3d/api
+  # Pipeline: Audio → NVIDIA gRPC API → Blendshapes → Blender 3D Render → MP4
+  audio2face3d:
+    nvidia_api_key: ""                     # Set NVIDIA_API_KEY env var (free from build.nvidia.com)
+    character: "james"                     # "mark", "claire", "james" (NVIDIA built-in 3D characters)
+    blender_path: ""                       # Set BLENDER_PATH env var (e.g. C:\Program Files\Blender Foundation\Blender 5.1\blender.exe)
+    render_resolution_x: 720              # Render width (px)
+    render_resolution_y: 720              # Render height (px)
+    render_fps: 30                         # Render frame rate
+    background_color: "0.12,0.15,0.22"    # Dark studio blue (R,G,B 0-1)
+    max_retries: 3
+    retry_delay: 10
+    emotion_joy: 0.3                       # Base joy level for teacher character (0-1)
+
+  # MoDA Fast Talking Head - Best quality realistic avatar (2025) [FALLBACK]
   # HF Space: https://huggingface.co/spaces/multimodalart/MoDA-fast-talking-head
   # Free ZeroGPU, excellent lip sync + emotion control
   moda:

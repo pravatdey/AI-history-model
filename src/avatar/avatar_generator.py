@@ -5,6 +5,7 @@ Supports:
 - SadTalker (realistic lip sync + head movements)
 - Wav2Lip (precise lip sync)
 - Simple fallback (image + audio overlay)
+- Audio2Face-3D (NVIDIA 3D digital human via Cloud API + Blender)
 """
 
 import os
@@ -412,24 +413,31 @@ class AvatarGenerator:
         wav2lip_path: str = None,
         multitalk_config: dict = None,
         sadtalker_hf_config: dict = None,
-        moda_config: dict = None
+        moda_config: dict = None,
+        audio2face3d_config: dict = None
     ):
         """
         Initialize avatar generator.
 
         Args:
-            method: Generation method ("moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
+            method: Generation method ("audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
             avatar_image: Path to default avatar image
             sadtalker_path: Path to SadTalker installation
             wav2lip_path: Path to Wav2Lip installation
             multitalk_config: Dict of MultiTalk configuration options
             sadtalker_hf_config: Dict of SadTalker HF Space configuration options
             moda_config: Dict of MoDA configuration options
+            audio2face3d_config: Dict of Audio2Face-3D configuration options
         """
         self.method = method
         self.avatar_image = avatar_image or "assets/avatars/news_anchor.png"
         self.sadtalker_path = sadtalker_path or os.getenv("SADTALKER_PATH", "")
         self.wav2lip_path = wav2lip_path or os.getenv("WAV2LIP_PATH", "")
+
+        # Initialize Audio2Face-3D engine (NVIDIA 3D digital human - best quality)
+        self._audio2face3d_engine = None
+        self._audio2face3d_config = audio2face3d_config or {}
+        self._init_audio2face3d()
 
         # Initialize MoDA engine (best quality, free)
         self._moda_engine = None
@@ -457,6 +465,27 @@ class AvatarGenerator:
         self._default_mouth_region = None
 
         logger.info(f"AvatarGenerator initialized: method={self.method}, available={self.available_methods}")
+
+    def _init_audio2face3d(self):
+        """Initialize the Audio2Face-3D engine if configured."""
+        try:
+            from src.avatar.audio2face3d_engine import Audio2Face3DEngine, Audio2Face3DConfig
+            config = Audio2Face3DConfig(
+                nvidia_api_key=self._audio2face3d_config.get("nvidia_api_key", ""),
+                character=self._audio2face3d_config.get("character", "james"),
+                blender_path=self._audio2face3d_config.get("blender_path", ""),
+                render_script=self._audio2face3d_config.get("render_script", ""),
+                render_resolution_x=self._audio2face3d_config.get("render_resolution_x", 720),
+                render_resolution_y=self._audio2face3d_config.get("render_resolution_y", 720),
+                render_fps=self._audio2face3d_config.get("render_fps", 30),
+                background_color=self._audio2face3d_config.get("background_color", "0.12,0.15,0.22"),
+                max_retries=self._audio2face3d_config.get("max_retries", 3),
+                retry_delay=self._audio2face3d_config.get("retry_delay", 10.0),
+                emotion_joy=self._audio2face3d_config.get("emotion_joy", 0.3),
+            )
+            self._audio2face3d_engine = Audio2Face3DEngine(config)
+        except Exception as e:
+            logger.debug(f"Audio2Face-3D engine init skipped: {e}")
 
     def _init_moda(self):
         """Initialize the MoDA engine if configured."""
@@ -542,6 +571,10 @@ class AvatarGenerator:
         """Detect which generation methods are available"""
         available = ["simple"]  # Always available
 
+        # Check for Audio2Face-3D (NVIDIA 3D digital human - best quality)
+        if self._audio2face3d_engine and self._audio2face3d_engine.is_available():
+            available.append("audio2face3d")
+
         # Check for MoDA (best quality, free)
         if self._moda_engine and self._moda_engine.is_available():
             available.append("moda")
@@ -589,7 +622,9 @@ class AvatarGenerator:
 
     def _select_best_method(self) -> str:
         """Select the best available method"""
-        if "moda" in self.available_methods:
+        if "audio2face3d" in self.available_methods:
+            return "audio2face3d"
+        elif "moda" in self.available_methods:
             return "moda"
         elif "multitalk" in self.available_methods:
             return "multitalk"
@@ -651,7 +686,9 @@ class AvatarGenerator:
         logger.info(f"Generating avatar video: method={method}")
 
         # Generate based on method
-        if method == "moda" and "moda" in self.available_methods:
+        if method == "audio2face3d" and "audio2face3d" in self.available_methods:
+            return self._generate_audio2face3d(audio_path, output_path, avatar_image)
+        elif method == "moda" and "moda" in self.available_methods:
             return self._generate_moda(audio_path, output_path, avatar_image)
         elif method == "multitalk" and "multitalk" in self.available_methods:
             return self._generate_multitalk(audio_path, output_path, avatar_image)
@@ -662,6 +699,39 @@ class AvatarGenerator:
         elif method == "wav2lip" and "wav2lip" in self.available_methods:
             return self._generate_wav2lip(audio_path, output_path, avatar_image)
         else:
+            return self._generate_simple(audio_path, output_path, avatar_image)
+
+    def _generate_audio2face3d(
+        self,
+        audio_path: str,
+        output_path: str,
+        avatar_image: str
+    ) -> AvatarResult:
+        """Generate video using NVIDIA Audio2Face-3D (3D digital human)."""
+        try:
+            result = self._audio2face3d_engine.generate(
+                audio_path=audio_path,
+                output_path=output_path,
+            )
+
+            if result["success"]:
+                return AvatarResult(
+                    success=True,
+                    video_path=result["video_path"],
+                    duration=result["duration"],
+                    method="audio2face3d",
+                )
+
+            raise Exception(result.get("error", "Audio2Face-3D generation failed"))
+
+        except Exception as e:
+            logger.error(f"Audio2Face-3D generation failed: {e}")
+            logger.info("Falling back to MoDA → SadTalker HF")
+            # Fallback chain: moda -> sadtalker_hf -> simple
+            if "moda" in self.available_methods:
+                return self._generate_moda(audio_path, output_path, avatar_image)
+            if "sadtalker_hf" in self.available_methods:
+                return self._generate_sadtalker_hf(audio_path, output_path, avatar_image)
             return self._generate_simple(audio_path, output_path, avatar_image)
 
     def _generate_moda(

@@ -47,10 +47,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg libsndfile1 imagemagick
 
+      - name: Install Blender (for Audio2Face-3D 3D rendering)
+        run: |
+          sudo snap install blender --classic
+          echo "BLENDER_PATH=$(which blender)" >> $GITHUB_ENV
+          blender --version
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          # Install full NVIDIA ACE protobuf wheel (PyPI version is incomplete)
+          pip install https://github.com/NVIDIA/Audio2Face-3D-Samples/raw/main/proto/sample_wheel/nvidia_ace-1.2.0-py3-none-any.whl
 
       - name: Create necessary directories
         run: |
@@ -61,6 +69,8 @@ jobs:
         run: |
           echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > .env
           echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> .env
+          echo "NVIDIA_API_KEY=${{ secrets.NVIDIA_API_KEY }}" >> .env
+          echo "BLENDER_PATH=$(which blender)" >> .env
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
           echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env
 
@@ -122,6 +132,8 @@ jobs:
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          BLENDER_PATH: ${{ env.BLENDER_PATH }}
         run: |
           PART_ARG=""
           if [ -n "${{ github.event.inputs.part_number }}" ]; then

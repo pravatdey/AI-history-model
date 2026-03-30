@@ -98,6 +98,7 @@ class HistoryPipeline:
             multitalk_config=avatar_config.get("multitalk", {}),
             sadtalker_hf_config=avatar_config.get("sadtalker_hf", {}),
             moda_config=avatar_config.get("moda", {}),
+            audio2face3d_config=avatar_config.get("audio2face3d", {}),
         )
 
         # Initialize video composer
