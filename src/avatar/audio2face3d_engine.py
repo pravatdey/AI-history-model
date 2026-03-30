@@ -327,10 +327,18 @@ class Audio2Face3DEngine:
             loop = None
 
         if loop and loop.is_running():
-            # Event loop already running — create a new thread to run the coroutine
+            # Event loop already running — run coroutine in a new loop on a separate thread
             import concurrent.futures
+
+            def _run_in_new_loop(c):
+                new_loop = asyncio.new_event_loop()
+                try:
+                    return new_loop.run_until_complete(c)
+                finally:
+                    new_loop.close()
+
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(asyncio.run, coro)
+                future = pool.submit(_run_in_new_loop, coro)
                 return future.result(timeout=300)
         else:
             return asyncio.run(coro)

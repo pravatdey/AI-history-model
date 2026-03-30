@@ -83,7 +83,7 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "audio2face3d"               # "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto"
+  provider: "sadtalker_hf"               # "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto"
 
   default_image: "news_anchor.png"       # Reuse current affairs avatar (used by 2D engines)
 
