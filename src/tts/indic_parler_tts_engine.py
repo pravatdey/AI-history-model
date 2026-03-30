@@ -177,9 +177,9 @@ class IndicParlerTTSEngine(BaseTTS):
                 )
 
                 with httpx.Client(timeout=300, headers=headers) as http:
-                    # Step 1: Submit job via /call endpoint
+                    # Step 1: Submit job via /gradio_api/call endpoint
                     call_resp = http.post(
-                        f"{base_url}/call/generate_finetuned",
+                        f"{base_url}/gradio_api/call/generate_finetuned",
                         json={"data": [text, self.voice_description]},
                     )
                     call_resp.raise_for_status()
@@ -189,8 +189,8 @@ class IndicParlerTTSEngine(BaseTTS):
                         logger.warning("No event_id returned")
                         continue
 
-                    # Step 2: Stream result via /call/{event_id} SSE endpoint
-                    result_url = f"{base_url}/call/generate_finetuned/{event_id}"
+                    # Step 2: Stream result via /gradio_api/call/{event_id} SSE endpoint
+                    result_url = f"{base_url}/gradio_api/call/generate_finetuned/{event_id}"
                     with http.stream("GET", result_url) as stream:
                         file_url = None
                         for line in stream.iter_lines():
@@ -215,7 +215,7 @@ class IndicParlerTTSEngine(BaseTTS):
                         if file_url:
                             # Download the audio file
                             if not file_url.startswith("http"):
-                                file_url = f"{base_url}/file={file_url}"
+                                file_url = f"{base_url}/gradio_api/file={file_url}"
                             audio_resp = http.get(file_url)
                             audio_resp.raise_for_status()
                             with open(output_path, "wb") as f:
