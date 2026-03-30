@@ -190,45 +190,54 @@ class IndicParlerTTSEngine(BaseTTS):
                         continue
 
                     # Step 2: Stream result via /gradio_api/call/{event_id} SSE endpoint
+                    # Step 2: Poll SSE result (non-streaming for reliability)
                     result_url = f"{base_url}/gradio_api/call/generate_finetuned/{event_id}"
-                    with http.stream("GET", result_url) as stream:
-                        file_url = None
-                        for line in stream.iter_lines():
-                            line = line.strip()
-                            if not line:
-                                continue
-                            if line.startswith("data:"):
-                                data_str = line[5:].strip()
-                                try:
-                                    import json
-                                    data = json.loads(data_str)
-                                    # data is a list, first element is the audio info
-                                    if isinstance(data, list) and len(data) > 0:
-                                        audio_info = data[0]
-                                        if isinstance(audio_info, dict):
-                                            # Prefer "path" — the "url" from Space is often broken
-                                            file_url = audio_info.get("path") or audio_info.get("url")
-                                        elif isinstance(audio_info, str):
-                                            file_url = audio_info
-                                except (json.JSONDecodeError, TypeError):
-                                    pass
+                    logger.info(f"Polling result: {event_id}")
+                    result_resp = http.get(result_url)
+                    result_resp.raise_for_status()
+                    raw_sse = result_resp.text
+                    logger.info(f"SSE response length: {len(raw_sse)} chars")
 
-                        if file_url:
-                            # Download the audio file
-                            # Always construct URL from path — the url field from
-                            # the Space is broken (/gradio_api/c/gradio_api/file=)
-                            if file_url.startswith("/tmp/"):
-                                file_url = f"{base_url}/gradio_api/file={file_url}"
-                            elif not file_url.startswith("http"):
-                                file_url = f"{base_url}/gradio_api/file={file_url}"
-                            audio_resp = http.get(file_url)
-                            audio_resp.raise_for_status()
-                            with open(output_path, "wb") as f:
-                                f.write(audio_resp.content)
-                            if Path(output_path).exists() and Path(output_path).stat().st_size > 100:
-                                return output_path
-                            else:
-                                logger.warning("Downloaded file too small or empty")
+                    # Parse SSE lines to find audio path
+                    import json
+                    file_url = None
+                    for line in raw_sse.split("\n"):
+                        line = line.strip()
+                        if line.startswith("data:"):
+                            data_str = line[5:].strip()
+                            try:
+                                data = json.loads(data_str)
+                                if isinstance(data, list) and len(data) > 0:
+                                    audio_info = data[0]
+                                    if isinstance(audio_info, dict):
+                                        file_url = audio_info.get("path") or audio_info.get("url")
+                                        logger.info(f"Found audio path: {file_url}")
+                                    elif isinstance(audio_info, str):
+                                        file_url = audio_info
+                            except (json.JSONDecodeError, TypeError):
+                                pass
+
+                    if file_url:
+                        # Construct correct download URL from path
+                        if file_url.startswith("/tmp/"):
+                            download_url = f"{base_url}/gradio_api/file={file_url}"
+                        elif not file_url.startswith("http"):
+                            download_url = f"{base_url}/gradio_api/file={file_url}"
+                        else:
+                            download_url = file_url
+                        logger.info(f"Downloading audio from: {download_url}")
+                        audio_resp = http.get(download_url)
+                        audio_resp.raise_for_status()
+                        with open(output_path, "wb") as f:
+                            f.write(audio_resp.content)
+                        size = Path(output_path).stat().st_size
+                        if size > 100:
+                            logger.info(f"Audio saved: {output_path} ({size} bytes)")
+                            return output_path
+                        else:
+                            logger.warning(f"Downloaded file too small: {size} bytes")
+                    else:
+                        logger.warning(f"No audio path found in SSE response: {raw_sse[:300]}")
 
             except Exception as e:
                 logger.warning(f"Parler-TTS attempt {attempt} failed: {e}")
