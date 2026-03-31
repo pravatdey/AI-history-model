@@ -99,6 +99,7 @@ class HistoryPipeline:
             sadtalker_hf_config=avatar_config.get("sadtalker_hf", {}),
             moda_config=avatar_config.get("moda", {}),
             audio2face3d_config=avatar_config.get("audio2face3d", {}),
+            echomimic_config=avatar_config.get("echomimic", {}),
         )
 
         # Initialize video composer

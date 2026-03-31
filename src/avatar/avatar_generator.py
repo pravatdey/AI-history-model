@@ -414,13 +414,14 @@ class AvatarGenerator:
         multitalk_config: dict = None,
         sadtalker_hf_config: dict = None,
         moda_config: dict = None,
-        audio2face3d_config: dict = None
+        audio2face3d_config: dict = None,
+        echomimic_config: dict = None
     ):
         """
         Initialize avatar generator.
 
         Args:
-            method: Generation method ("audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
+            method: Generation method ("echomimic", "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
             avatar_image: Path to default avatar image
             sadtalker_path: Path to SadTalker installation
             wav2lip_path: Path to Wav2Lip installation
@@ -428,6 +429,7 @@ class AvatarGenerator:
             sadtalker_hf_config: Dict of SadTalker HF Space configuration options
             moda_config: Dict of MoDA configuration options
             audio2face3d_config: Dict of Audio2Face-3D configuration options
+            echomimic_config: Dict of EchoMimic configuration options
         """
         self.method = method
         self.avatar_image = avatar_image or "assets/avatars/news_anchor.png"
@@ -453,6 +455,11 @@ class AvatarGenerator:
         self._sadtalker_hf_engine = None
         self._sadtalker_hf_config = sadtalker_hf_config or {}
         self._init_sadtalker_hf()
+
+        # Initialize EchoMimic engine (realistic lip-sync, free HF Space)
+        self._echomimic_engine = None
+        self._echomimic_config = echomimic_config or {}
+        self._init_echomimic()
 
         # Detect available methods
         self.available_methods = self._detect_methods()
@@ -567,6 +574,26 @@ class AvatarGenerator:
         except Exception as e:
             logger.debug(f"SadTalker HF engine init skipped: {e}")
 
+    def _init_echomimic(self):
+        """Initialize the EchoMimic HF Space engine if configured."""
+        try:
+            from src.avatar.echomimic_engine import EchoMimicEngine, EchoMimicConfig
+            cfg = self._echomimic_config
+            config = EchoMimicConfig(
+                hf_space_id=cfg.get("hf_space_id", "fffiloni/EchoMimic"),
+                width=cfg.get("width", 512),
+                height=cfg.get("height", 512),
+                steps=cfg.get("steps", 30),
+                cfg=cfg.get("cfg", 2.5),
+                fps=cfg.get("fps", 24),
+                max_chunk_seconds=cfg.get("max_chunk_seconds", 30.0),
+                max_retries=cfg.get("max_retries", 3),
+                retry_delay=cfg.get("retry_delay", 15),
+            )
+            self._echomimic_engine = EchoMimicEngine(config)
+        except Exception as e:
+            logger.debug(f"EchoMimic engine init skipped: {e}")
+
     def _detect_methods(self) -> list:
         """Detect which generation methods are available"""
         available = ["simple"]  # Always available
@@ -582,6 +609,10 @@ class AvatarGenerator:
         # Check for MultiTalk
         if self._multitalk_engine and self._multitalk_engine.is_available():
             available.append("multitalk")
+
+        # Check for EchoMimic (realistic lip-sync, free HF Space)
+        if self._echomimic_engine and self._echomimic_engine.is_available():
+            available.append("echomimic")
 
         # Check for SadTalker HF Space (free, no local GPU needed)
         if self._sadtalker_hf_engine and self._sadtalker_hf_engine.is_available():
@@ -686,7 +717,9 @@ class AvatarGenerator:
         logger.info(f"Generating avatar video: method={method}")
 
         # Generate based on method
-        if method == "audio2face3d" and "audio2face3d" in self.available_methods:
+        if method == "echomimic" and "echomimic" in self.available_methods:
+            return self._generate_echomimic(audio_path, output_path, avatar_image)
+        elif method == "audio2face3d" and "audio2face3d" in self.available_methods:
             return self._generate_audio2face3d(audio_path, output_path, avatar_image)
         elif method == "moda" and "moda" in self.available_methods:
             return self._generate_moda(audio_path, output_path, avatar_image)
@@ -699,6 +732,35 @@ class AvatarGenerator:
         elif method == "wav2lip" and "wav2lip" in self.available_methods:
             return self._generate_wav2lip(audio_path, output_path, avatar_image)
         else:
+            return self._generate_simple(audio_path, output_path, avatar_image)
+
+    def _generate_echomimic(
+        self,
+        audio_path: str,
+        output_path: str,
+        avatar_image: str
+    ) -> AvatarResult:
+        """Generate video using EchoMimic (realistic lip-sync, free HF Space)."""
+        try:
+            result = self._echomimic_engine.generate(
+                audio_path=audio_path,
+                image_path=avatar_image,
+                output_path=output_path,
+            )
+
+            if result["success"]:
+                return AvatarResult(
+                    success=True,
+                    video_path=result["video_path"],
+                    duration=result["duration"],
+                    method="echomimic",
+                )
+
+            raise Exception(result.get("error", "EchoMimic generation failed"))
+
+        except Exception as e:
+            logger.error(f"EchoMimic generation failed: {e}")
+            logger.info("Falling back to simple avatar")
             return self._generate_simple(audio_path, output_path, avatar_image)
 
     def _generate_audio2face3d(

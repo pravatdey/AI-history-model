@@ -92,7 +92,7 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "simple"                      # "simple" - reliable static teacher overlay (no flaky HF Spaces)
+  provider: "echomimic"                    # "echomimic" - realistic lip-sync via free HF Space (fffiloni/EchoMimic)
 
   default_image: "assets/avatars/teacher.jpg"   # Indian male teacher avatar (used by 2D engines)
 
@@ -158,6 +158,20 @@ avatar:
     num_gpus: 1                          # Number of GPUs for inference
 
     prompt: "A professional Indian male teacher is speaking directly to the camera in a studio setting. He maintains eye contact, has natural head movements, and speaks with clear lip movements synchronized to the audio. The background is clean and professional."
+
+  # EchoMimic - Realistic lip-sync via free HuggingFace Space
+  # HF Space: https://huggingface.co/spaces/fffiloni/EchoMimic
+  # Diffusion-based, high quality lip-sync + facial animation
+  echomimic:
+    hf_space_id: "fffiloni/EchoMimic"
+    width: 512
+    height: 512
+    steps: 30                              # Diffusion steps (more = better quality, slower)
+    cfg: 2.5                               # Guidance scale
+    fps: 24
+    max_chunk_seconds: 30.0                # Audio chunk size for ZeroGPU
+    max_retries: 3
+    retry_delay: 15
 
   # SadTalker HF Space - Free lip-sync via HuggingFace API
   # HF Space: https://huggingface.co/spaces/vinthony/SadTalker
