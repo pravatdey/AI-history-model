@@ -100,6 +100,8 @@ class HistoryPipeline:
             moda_config=avatar_config.get("moda", {}),
             audio2face3d_config=avatar_config.get("audio2face3d", {}),
             echomimic_config=avatar_config.get("echomimic", {}),
+            wan2_s2v_config=avatar_config.get("wan2_s2v", {}),
+            hallo_config=avatar_config.get("hallo", {}),
         )
 
         # Initialize video composer

@@ -415,13 +415,15 @@ class AvatarGenerator:
         sadtalker_hf_config: dict = None,
         moda_config: dict = None,
         audio2face3d_config: dict = None,
-        echomimic_config: dict = None
+        echomimic_config: dict = None,
+        wan2_s2v_config: dict = None,
+        hallo_config: dict = None
     ):
         """
         Initialize avatar generator.
 
         Args:
-            method: Generation method ("echomimic", "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
+            method: Generation method ("wan2_s2v", "hallo", "echomimic", "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto")
             avatar_image: Path to default avatar image
             sadtalker_path: Path to SadTalker installation
             wav2lip_path: Path to Wav2Lip installation
@@ -430,11 +432,23 @@ class AvatarGenerator:
             moda_config: Dict of MoDA configuration options
             audio2face3d_config: Dict of Audio2Face-3D configuration options
             echomimic_config: Dict of EchoMimic configuration options
+            wan2_s2v_config: Dict of Wan2.2 S2V configuration options
+            hallo_config: Dict of Hallo3 configuration options
         """
         self.method = method
         self.avatar_image = avatar_image or "assets/avatars/news_anchor.png"
         self.sadtalker_path = sadtalker_path or os.getenv("SADTALKER_PATH", "")
         self.wav2lip_path = wav2lip_path or os.getenv("WAV2LIP_PATH", "")
+
+        # Initialize Wan2.2 S2V engine (cinema-grade realistic avatar, free)
+        self._wan2_s2v_engine = None
+        self._wan2_s2v_config = wan2_s2v_config or {}
+        self._init_wan2_s2v()
+
+        # Initialize Hallo3 engine (dynamic realistic avatar, free)
+        self._hallo_engine = None
+        self._hallo_config = hallo_config or {}
+        self._init_hallo()
 
         # Initialize Audio2Face-3D engine (NVIDIA 3D digital human - best quality)
         self._audio2face3d_engine = None
@@ -472,6 +486,57 @@ class AvatarGenerator:
         self._default_mouth_region = None
 
         logger.info(f"AvatarGenerator initialized: method={self.method}, available={self.available_methods}")
+
+    def _init_wan2_s2v(self):
+        """Initialize the Wan2.2 S2V engine (cinema-grade realistic avatar)."""
+        try:
+            from src.avatar.wan2_s2v_engine import Wan2SVEngine, Wan2SVConfig
+            cfg = self._wan2_s2v_config
+            config = Wan2SVConfig(
+                hf_space_id=cfg.get("hf_space_id", "Wan-AI/Wan2.2-S2V"),
+                hf_token=cfg.get("hf_token", ""),
+                resolution=cfg.get("resolution", "480P"),
+                sample_steps=cfg.get("sample_steps", 25),
+                cfg_scale=cfg.get("cfg_scale", 3.5),
+                seed=cfg.get("seed", -1),
+                fps=cfg.get("fps", 24),
+                max_chunk_seconds=cfg.get("max_chunk_seconds", 30.0),
+                max_retries=cfg.get("max_retries", 3),
+                retry_delay=cfg.get("retry_delay", 15.0),
+                hf_space_ids=cfg.get("hf_space_ids", [
+                    "Wan-AI/Wan2.2-S2V",
+                    "hf-audio/Wan2.2-S2V",
+                ]),
+            )
+            self._wan2_s2v_engine = Wan2SVEngine(config)
+        except Exception as e:
+            logger.debug(f"Wan2.2 S2V engine init skipped: {e}")
+
+    def _init_hallo(self):
+        """Initialize the Hallo3 engine (dynamic realistic avatar)."""
+        try:
+            from src.avatar.hallo_engine import HalloEngine, HalloConfig
+            cfg = self._hallo_config
+            config = HalloConfig(
+                hf_space_id=cfg.get("hf_space_id", "fudan-generative-ai/hallo3"),
+                hf_token=cfg.get("hf_token", ""),
+                pose_weight=cfg.get("pose_weight", 1.0),
+                face_weight=cfg.get("face_weight", 1.0),
+                lip_weight=cfg.get("lip_weight", 1.0),
+                face_expand_ratio=cfg.get("face_expand_ratio", 1.2),
+                seed=cfg.get("seed", -1),
+                max_chunk_seconds=cfg.get("max_chunk_seconds", 30.0),
+                max_retries=cfg.get("max_retries", 3),
+                retry_delay=cfg.get("retry_delay", 15.0),
+                hf_space_ids=cfg.get("hf_space_ids", [
+                    "fudan-generative-ai/hallo3",
+                    "fudan-generative-ai/hallo",
+                    "fffiloni/hallo3",
+                ]),
+            )
+            self._hallo_engine = HalloEngine(config)
+        except Exception as e:
+            logger.debug(f"Hallo3 engine init skipped: {e}")
 
     def _init_audio2face3d(self):
         """Initialize the Audio2Face-3D engine if configured."""
@@ -598,6 +663,14 @@ class AvatarGenerator:
         """Detect which generation methods are available"""
         available = ["simple"]  # Always available
 
+        # Check for Wan2.2 S2V (cinema-grade realistic avatar, free)
+        if self._wan2_s2v_engine and self._wan2_s2v_engine.is_available():
+            available.append("wan2_s2v")
+
+        # Check for Hallo3 (dynamic realistic avatar, free)
+        if self._hallo_engine and self._hallo_engine.is_available():
+            available.append("hallo")
+
         # Check for Audio2Face-3D (NVIDIA 3D digital human - best quality)
         if self._audio2face3d_engine and self._audio2face3d_engine.is_available():
             available.append("audio2face3d")
@@ -652,13 +725,22 @@ class AvatarGenerator:
         return False
 
     def _select_best_method(self) -> str:
-        """Select the best available method"""
-        if "audio2face3d" in self.available_methods:
+        """Select the best available method.
+
+        Priority: wan2_s2v > hallo > audio2face3d > moda > multitalk > echomimic > sadtalker_hf > sadtalker > wav2lip > simple
+        """
+        if "wan2_s2v" in self.available_methods:
+            return "wan2_s2v"
+        elif "hallo" in self.available_methods:
+            return "hallo"
+        elif "audio2face3d" in self.available_methods:
             return "audio2face3d"
         elif "moda" in self.available_methods:
             return "moda"
         elif "multitalk" in self.available_methods:
             return "multitalk"
+        elif "echomimic" in self.available_methods:
+            return "echomimic"
         elif "sadtalker_hf" in self.available_methods:
             return "sadtalker_hf"
         elif "sadtalker" in self.available_methods:
@@ -717,7 +799,11 @@ class AvatarGenerator:
         logger.info(f"Generating avatar video: method={method}")
 
         # Generate based on method
-        if method == "echomimic" and "echomimic" in self.available_methods:
+        if method == "wan2_s2v" and "wan2_s2v" in self.available_methods:
+            return self._generate_wan2_s2v(audio_path, output_path, avatar_image)
+        elif method == "hallo" and "hallo" in self.available_methods:
+            return self._generate_hallo(audio_path, output_path, avatar_image)
+        elif method == "echomimic" and "echomimic" in self.available_methods:
             return self._generate_echomimic(audio_path, output_path, avatar_image)
         elif method == "audio2face3d" and "audio2face3d" in self.available_methods:
             return self._generate_audio2face3d(audio_path, output_path, avatar_image)
@@ -732,6 +818,74 @@ class AvatarGenerator:
         elif method == "wav2lip" and "wav2lip" in self.available_methods:
             return self._generate_wav2lip(audio_path, output_path, avatar_image)
         else:
+            return self._generate_simple(audio_path, output_path, avatar_image)
+
+    def _generate_wan2_s2v(
+        self,
+        audio_path: str,
+        output_path: str,
+        avatar_image: str
+    ) -> AvatarResult:
+        """Generate video using Wan2.2 S2V (cinema-grade realistic avatar, free)."""
+        try:
+            result = self._wan2_s2v_engine.generate(
+                audio_path=audio_path,
+                image_path=avatar_image,
+                output_path=output_path,
+            )
+
+            if result["success"]:
+                return AvatarResult(
+                    success=True,
+                    video_path=result["video_path"],
+                    duration=result["duration"],
+                    method="wan2_s2v",
+                )
+
+            raise Exception(result.get("error", "Wan2.2 S2V generation failed"))
+
+        except Exception as e:
+            logger.error(f"Wan2.2 S2V generation failed: {e}")
+            logger.info("Falling back to Hallo → MoDA → EchoMimic")
+            if "hallo" in self.available_methods:
+                return self._generate_hallo(audio_path, output_path, avatar_image)
+            if "moda" in self.available_methods:
+                return self._generate_moda(audio_path, output_path, avatar_image)
+            if "echomimic" in self.available_methods:
+                return self._generate_echomimic(audio_path, output_path, avatar_image)
+            return self._generate_simple(audio_path, output_path, avatar_image)
+
+    def _generate_hallo(
+        self,
+        audio_path: str,
+        output_path: str,
+        avatar_image: str
+    ) -> AvatarResult:
+        """Generate video using Hallo3 (dynamic realistic avatar, free)."""
+        try:
+            result = self._hallo_engine.generate(
+                audio_path=audio_path,
+                image_path=avatar_image,
+                output_path=output_path,
+            )
+
+            if result["success"]:
+                return AvatarResult(
+                    success=True,
+                    video_path=result["video_path"],
+                    duration=result["duration"],
+                    method="hallo",
+                )
+
+            raise Exception(result.get("error", "Hallo generation failed"))
+
+        except Exception as e:
+            logger.error(f"Hallo generation failed: {e}")
+            logger.info("Falling back to MoDA → EchoMimic")
+            if "moda" in self.available_methods:
+                return self._generate_moda(audio_path, output_path, avatar_image)
+            if "echomimic" in self.available_methods:
+                return self._generate_echomimic(audio_path, output_path, avatar_image)
             return self._generate_simple(audio_path, output_path, avatar_image)
 
     def _generate_echomimic(

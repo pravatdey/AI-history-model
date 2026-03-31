@@ -92,9 +92,49 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "echomimic"                    # "echomimic" - realistic lip-sync via free HF Space (fffiloni/EchoMimic)
+  provider: "wan2_s2v"                     # "wan2_s2v" - cinema-grade realistic AI avatar (Wan2.2-S2V, free HF Space)
+  # Priority chain (auto): wan2_s2v > hallo > audio2face3d > moda > multitalk > echomimic > sadtalker_hf > simple
 
   default_image: "assets/avatars/teacher.jpg"   # Indian male teacher avatar (used by 2D engines)
+
+  # Wan2.2 S2V - Cinema-grade Realistic AI Avatar (BEST quality, free HF Space)
+  # HF Space: https://huggingface.co/spaces/Wan-AI/Wan2.2-S2V
+  # GitHub: https://github.com/Wan-Video/Wan2.2
+  # 14B parameter model by Alibaba - produces HeyGen/Synthesia quality for FREE
+  wan2_s2v:
+    hf_space_id: "Wan-AI/Wan2.2-S2V"
+    hf_space_ids:
+      - "Wan-AI/Wan2.2-S2V"
+      - "hf-audio/Wan2.2-S2V"
+    hf_token: ""                           # Set HF_TOKEN env var for priority GPU (optional)
+    resolution: "480P"                     # "480P" (faster) or "720P" (better quality)
+    sample_steps: 25                       # Diffusion steps (more = better, slower)
+    cfg_scale: 3.5                         # Guidance scale
+    seed: -1                               # -1 for random
+    fps: 24
+    max_chunk_seconds: 30.0                # Audio chunk size for ZeroGPU timeout
+    max_retries: 3
+    retry_delay: 15
+
+  # Hallo3 - Dynamic Realistic AI Avatar (excellent quality, free HF Space)
+  # HF Space: https://huggingface.co/spaces/fudan-generative-ai/hallo3
+  # GitHub: https://github.com/fudan-generative-vision/hallo3
+  # Diffusion Transformer by Fudan University - ICLR 2025 / CVPR 2025
+  hallo:
+    hf_space_id: "fudan-generative-ai/hallo3"
+    hf_space_ids:
+      - "fudan-generative-ai/hallo3"
+      - "fudan-generative-ai/hallo"
+      - "fffiloni/hallo3"
+    hf_token: ""                           # Set HF_TOKEN env var for priority GPU (optional)
+    pose_weight: 1.0                       # Head pose intensity (0-1)
+    face_weight: 1.0                       # Facial expression intensity (0-1)
+    lip_weight: 1.0                        # Lip sync weight (0-1)
+    face_expand_ratio: 1.2                 # Face crop expansion
+    seed: -1
+    max_chunk_seconds: 30.0
+    max_retries: 3
+    retry_delay: 15
 
   # NVIDIA Audio2Face-3D - 3D Digital Human (best quality, free Cloud API)
   # API: https://build.nvidia.com/nvidia/audio2face-3d/api
