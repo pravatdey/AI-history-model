@@ -65,7 +65,7 @@ script:
 
 # Text-to-Speech Configuration
 tts:
-  provider: "indic_parler"                # "edge", "indic_parler", "elevenlabs"
+  provider: "edge"                        # "edge", "indic_parler", "elevenlabs"
   output_format: "mp3"
 
   # Indic Parler-TTS - Natural Indian voice via HuggingFace (FREE)
@@ -94,7 +94,7 @@ tts:
 avatar:
   provider: "sadtalker_hf"               # "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto"
 
-  default_image: "teacher.jpg"            # Indian male teacher avatar (used by 2D engines)
+  default_image: "assets/avatars/teacher.jpg"   # Indian male teacher avatar (used by 2D engines)
 
   # NVIDIA Audio2Face-3D - 3D Digital Human (best quality, free Cloud API)
   # API: https://build.nvidia.com/nvidia/audio2face-3d/api
