@@ -4,7 +4,7 @@ SadTalker HF Space Avatar Engine
 Generates talking head videos using SadTalker via free HuggingFace Space API.
 Handles long audio by chunking into segments, generating clips, and concatenating.
 
-HF Space: https://huggingface.co/spaces/vinthony/SadTalker
+HF Space: https://huggingface.co/spaces/kevinwang676/SadTalker
 Max audio per call: 180s (we use 30s chunks for free ZeroGPU quota).
 """
 
@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 @dataclass
 class SadTalkerHFConfig:
     """Configuration for SadTalker HF Space generation."""
-    hf_space_id: str = "vinthony/SadTalker"
+    hf_space_id: str = "kevinwang676/SadTalker"
 
     # SadTalker settings
     preprocess: str = "crop"          # crop, resize, full, extcrop, extfull
@@ -124,22 +124,15 @@ class SadTalkerHFEngine:
             start_time = time.time()
 
             result = client.predict(
-                source_image=handle_file(os.path.abspath(image_path)),
-                driven_audio=handle_file(os.path.abspath(wav_audio)),
-                preprocess_type=self.config.preprocess,
-                is_still_mode=self.config.still_mode,
-                enhancer=self.config.enhancer,
-                batch_size=self.config.batch_size,
-                size_of_image=self.config.size_of_image,
-                pose_style=self.config.pose_style,
-                facerender=self.config.facerender,
-                exp_weight=self.config.exp_weight,
-                use_ref_video=False,
-                ref_info="pose",
-                use_idle_mode=False,
-                length_of_audio=5,
-                blink_every=self.config.blink_every,
-                api_name="/test",
+                handle_file(os.path.abspath(image_path)),   # Source image
+                handle_file(os.path.abspath(wav_audio)),    # Input audio
+                self.config.preprocess,                      # preprocess
+                self.config.still_mode,                      # Still Mode
+                self.config.enhancer,                        # GFPGAN enhancer
+                self.config.batch_size,                      # batch size
+                str(self.config.size_of_image),              # face model resolution
+                self.config.pose_style,                      # Pose style
+                fn_index=0,
             )
 
             elapsed = time.time() - start_time
