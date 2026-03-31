@@ -92,7 +92,7 @@ tts:
 
 # Avatar Configuration
 avatar:
-  provider: "sadtalker_hf"               # "audio2face3d", "moda", "multitalk", "sadtalker_hf", "sadtalker", "wav2lip", "simple", "auto"
+  provider: "simple"                      # "simple" - reliable static teacher overlay (no flaky HF Spaces)
 
   default_image: "assets/avatars/teacher.jpg"   # Indian male teacher avatar (used by 2D engines)
 
@@ -195,7 +195,7 @@ composition:
 
   presentation_slides:
     enabled: true
-    content_start_x_pct: 0.30           # Right panel starts at 30% - left 30% reserved for avatar
+    content_start_x_pct: 0.0            # Full-screen slides (no left zone reserved)
     transition_duration: 0.5
     max_key_points: 4
     show_subject_badge: true
@@ -203,10 +203,10 @@ composition:
     bullet_style: "numbered"
 
   avatar:
-    position: "overlay_left"             # Avatar overlays on left zone of slides
-    scale: 0.65                          # Avatar height as fraction of video height (taller to fill left zone)
-    x_offset: 10                         # Pixels from left edge
-    transparent_bg: true                 # Remove avatar background, show only the person
+    position: "webcam_pip"               # Small teacher overlay in bottom-left corner
+    scale: 0.25                          # Teacher overlay ~25% of video height
+    x_offset: 15                         # Margin from left edge
+    transparent_bg: true
 
   text:
     headline:

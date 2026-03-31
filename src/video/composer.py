@@ -462,53 +462,17 @@ class VideoComposer:
             except Exception as e:
                 logger.warning(f"Failed to generate presentation slides: {e}")
 
-        # ── Resize and position avatar ───────────────────────────────────
+        # ── Resize and position avatar as webcam-style overlay ────────────
+        # Small teacher overlay in bottom-left corner (like a webcam pip)
         avatar_config = self.composition_config.get("avatar", {})
-        slides_config = self.composition_config.get("presentation_slides", {})
-        position = avatar_config.get("position", "left")
+        avatar_scale = avatar_config.get("scale", 0.25)
+        avatar_height = int(height * avatar_scale)
+        avatar_clip = avatar_clip.resize(height=avatar_height)
 
-        if position == "overlay_left":
-            # Avatar occupies the left zone (matched to content_start_x_pct)
-            content_start_pct = slides_config.get("content_start_x_pct", 0.30)
-            avatar_zone_w = int(width * content_start_pct)
-
-            avatar_scale = avatar_config.get("scale", 0.65)
-            avatar_height = int(height * avatar_scale)
-            avatar_clip = avatar_clip.resize(height=avatar_height)
-
-            # Cap width to stay within the avatar zone
-            if avatar_clip.w > avatar_zone_w:
-                avatar_clip = avatar_clip.resize(width=avatar_zone_w)
-
-            # Center horizontally in the avatar zone, bottom-aligned
-            x_offset = avatar_config.get("x_offset", 10)
-            x_pos = max(x_offset, (avatar_zone_w - avatar_clip.w) // 2)
-            y_pos = height - avatar_clip.h  # Bottom-aligned
-
-        elif position == "left":
-            # Legacy: Auto-fill left zone
-            content_start_pct = slides_config.get("content_start_x_pct", 0.33)
-            content_start_x = int(width * content_start_pct)
-
-            avatar_clip = avatar_clip.resize(width=content_start_x)
-            if avatar_clip.h > height:
-                avatar_clip = avatar_clip.resize(height=height)
-
-            x_pos = (content_start_x - avatar_clip.w) // 2
-            y_pos = height - avatar_clip.h
-        else:
-            # Centre / right: use manual scale + offsets
-            avatar_scale = avatar_config.get("scale", 0.55)
-            avatar_height = int(height * avatar_scale)
-            avatar_clip = avatar_clip.resize(height=avatar_height)
-            x_offset = avatar_config.get("x_offset", 0)
-            y_offset = avatar_config.get("y_offset", 0)
-
-            if position == "right":
-                x_pos = 4 * width // 5 - avatar_clip.w // 2 + x_offset
-            else:
-                x_pos = width // 2 - avatar_clip.w // 2 + x_offset
-            y_pos = height // 2 - avatar_clip.h // 2 + y_offset
+        # Position: bottom-left with padding
+        margin = 15
+        x_pos = margin
+        y_pos = height - avatar_clip.h - margin
 
         avatar_clip = avatar_clip.set_position((x_pos, y_pos))
 

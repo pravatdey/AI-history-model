@@ -125,7 +125,7 @@ class PresentationSlideGenerator:
 
     def __init__(
         self,
-        content_start_x_pct: float = 0.30,
+        content_start_x_pct: float = 0.0,
         max_key_points: int = 4,
         show_subject_badge: bool = True,
         show_terms_as_badges: bool = True,
@@ -275,10 +275,10 @@ class PresentationSlideGenerator:
         video_size: Tuple[int, int]
     ) -> Image.Image:
         """
-        Create a presentation slide with split layout:
+        Create a full-screen presentation slide:
         - Header bar spans full width at top
-        - Left ~30% reserved for avatar (gradient bg only)
-        - Right ~70% has subject badge + key points + terms
+        - Content uses full width (teacher overlay handled by composer)
+        - Bottom-left 200px reserved for teacher webcam overlay
         """
         width, height = video_size
         colors = self.THEMES.get(slide.subtitle, self.THEMES['Current Affairs'])
@@ -286,18 +286,18 @@ class PresentationSlideGenerator:
         img = Image.new('RGB', (width, height), (0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        # Split: right content starts at content_start_x_pct of width
-        content_x = int(width * self.content_start_x_pct)
+        # Full-screen layout — content starts from left edge with padding
+        content_x = 0
         header_h = 90
-        bottom_margin = 20  # small bottom padding instead of footer
+        bottom_margin = 20
 
-        # 1. Full-screen gradient background (covers both avatar zone + right panel)
+        # 1. Full-screen gradient background
         self._draw_right_panel_gradient(draw, 0, header_h, height, width, colors)
 
         # 2. Header bar (full width)
         self._draw_header(draw, img, slide, width, header_h, colors, 0)
 
-        # 3. Subject badge bar + "KEY POINTS" label on right panel
+        # 3. Subject badge bar + "KEY POINTS" label
         y_cursor = header_h + 10
         if self.show_subject_badge:
             y_cursor = self._draw_subject_badge_bar(draw, slide, content_x, width, y_cursor, colors)
