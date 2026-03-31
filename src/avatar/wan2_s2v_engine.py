@@ -178,15 +178,13 @@ class Wan2SVEngine:
             )
             start_time = time.time()
 
-            # Wan2.2 S2V API: image + audio → video
+            # Wan2.2 S2V API: image + audio + resolution → video
+            # Space has 3 inputs: ref_img, audio, resolution
             result = client.predict(
-                image=handle_file(os.path.abspath(image_path)),
-                audio=handle_file(os.path.abspath(wav_audio)),
-                resolution=self.config.resolution,
-                sample_steps=self.config.sample_steps,
-                cfg_scale=self.config.cfg_scale,
-                seed=self.config.seed,
-                api_name="/generate",
+                handle_file(os.path.abspath(image_path)),
+                handle_file(os.path.abspath(wav_audio)),
+                self.config.resolution,
+                api_name="/predict",
             )
 
             elapsed = time.time() - start_time

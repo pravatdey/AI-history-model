@@ -1,22 +1,19 @@
 """
-Hallo3 Avatar Engine
+SkyReels A1 Talking Head Avatar Engine
 
-Generates highly dynamic and realistic talking head videos using Hallo
-via free HuggingFace Space API (fudan-generative-ai/hallo).
+Generates realistic talking head videos using SkyReels A1
+via free HuggingFace Space API (Skywork/skyreels-a1-talking-head).
 
-Hallo3 (Fudan University Generative Vision Lab) uses Diffusion Transformer
-for portrait animation with natural facial expressions and head movements.
-Supports up to 4K resolution. ICLR 2025 / CVPR 2025 accepted.
+SkyReels A1 produces high-quality AI avatar animations from a single
+portrait image + audio with natural facial expressions and lip sync.
 
 Features:
-  - Highly dynamic realistic facial animation
+  - Realistic facial animation from photo + audio
   - Natural head movements and expressions
-  - High-resolution output (up to 4K)
-  - Excellent lip sync accuracy
-  - Free via HuggingFace Space
+  - Configurable guidance scale and inference steps
+  - Free via HuggingFace Space (ZeroGPU)
 
-HF Space: https://huggingface.co/spaces/fudan-generative-ai/hallo3
-GitHub: https://github.com/fudan-generative-vision/hallo3
+HF Space: https://huggingface.co/spaces/Skywork/skyreels-a1-talking-head
 """
 
 import math
@@ -34,17 +31,14 @@ logger = get_logger(__name__)
 
 
 @dataclass
-class HalloConfig:
-    """Configuration for Hallo HF Space generation."""
-    hf_space_id: str = "fudan-generative-ai/hallo3"
+class SkyReelsConfig:
+    """Configuration for SkyReels A1 HF Space generation."""
+    hf_space_id: str = "Skywork/skyreels-a1-talking-head"
     hf_token: str = ""
 
     # Generation settings
-    pose_weight: float = 1.0        # Head pose intensity (0-1)
-    face_weight: float = 1.0        # Facial expression intensity (0-1)
-    lip_weight: float = 1.0         # Lip sync weight (0-1)
-    face_expand_ratio: float = 1.2  # Face crop expansion ratio
-    seed: int = -1                  # -1 for random
+    guidance_scale: float = 3.0     # 1.0-7.0 (higher = more faithful to image)
+    steps: int = 10                 # Inference steps 5-30 (more = better, slower)
 
     # Chunking for long audio
     max_chunk_seconds: float = 30.0
@@ -53,23 +47,21 @@ class HalloConfig:
 
     # Multiple spaces to try (fallback if primary is down)
     hf_space_ids: list = field(default_factory=lambda: [
-        "fudan-generative-ai/hallo3",
-        "fudan-generative-ai/hallo",
-        "fffiloni/hallo3",
+        "Skywork/skyreels-a1-talking-head",
     ])
 
 
-class HalloEngine:
+class SkyReelsEngine:
     """
-    Generates talking head videos using Hallo3 HF Space.
+    Generates talking head videos using SkyReels A1 HF Space.
 
     For long audio (>30s), splits into chunks, generates each,
     and concatenates with ffmpeg.
     """
 
-    def __init__(self, config: Optional[HalloConfig] = None):
-        self.config = config or HalloConfig()
-        logger.info(f"HalloEngine initialized: space={self.config.hf_space_id}")
+    def __init__(self, config: Optional[SkyReelsConfig] = None):
+        self.config = config or SkyReelsConfig()
+        logger.info(f"SkyReelsEngine initialized: space={self.config.hf_space_id}")
 
     def is_available(self) -> bool:
         """Check if gradio_client is installed."""
@@ -87,7 +79,7 @@ class HalloEngine:
         output_path: str,
     ) -> dict:
         """
-        Generate a talking head video using Hallo3 HF Space.
+        Generate a talking head video using SkyReels A1 HF Space.
 
         Returns:
             dict with keys: success, video_path, duration, error
@@ -127,7 +119,7 @@ class HalloEngine:
         last_error = ""
 
         for space_id in spaces:
-            logger.info(f"Trying Hallo HF Space: {space_id}")
+            logger.info(f"Trying SkyReels A1 HF Space: {space_id}")
             for attempt in range(1, self.config.max_retries + 1):
                 logger.info(f"  Attempt {attempt}/{self.config.max_retries}")
                 result = self._generate_single(audio_path, image_path, output_path, space_id)
@@ -147,7 +139,7 @@ class HalloEngine:
 
         return {
             "success": False, "video_path": "", "duration": 0,
-            "error": f"Hallo failed on all spaces: {last_error}",
+            "error": f"SkyReels A1 failed on all spaces: {last_error}",
         }
 
     def _generate_single(
@@ -157,14 +149,14 @@ class HalloEngine:
         output_path: str,
         space_id: Optional[str] = None,
     ) -> dict:
-        """Generate a single video clip via Hallo HF Space API."""
+        """Generate a single video clip via SkyReels A1 HF Space API."""
         try:
             from gradio_client import Client, handle_file
 
             space = space_id or self.config.hf_space_id
             hf_token = self.config.hf_token or os.environ.get("HF_TOKEN", "")
 
-            logger.info(f"Connecting to Hallo: {space} (auth={'yes' if hf_token else 'no'})")
+            logger.info(f"Connecting to SkyReels A1: {space} (auth={'yes' if hf_token else 'no'})")
             client = Client(space, token=hf_token or None)
 
             # Ensure audio is WAV format
@@ -176,38 +168,36 @@ class HalloEngine:
                 }
 
             logger.info(
-                f"Submitting to Hallo (pose_weight={self.config.pose_weight}, "
-                f"face_weight={self.config.face_weight}, lip_weight={self.config.lip_weight})..."
+                f"Submitting to SkyReels A1 (guidance={self.config.guidance_scale}, "
+                f"steps={self.config.steps})..."
             )
             start_time = time.time()
 
-            # Hallo3 API: image + audio → video
+            # SkyReels A1 API: image + audio + guidance + steps → (video, side_by_side)
             result = client.predict(
-                source_image=handle_file(os.path.abspath(image_path)),
-                driving_audio=handle_file(os.path.abspath(wav_audio)),
-                pose_weight=self.config.pose_weight,
-                face_weight=self.config.face_weight,
-                lip_weight=self.config.lip_weight,
-                face_expand_ratio=self.config.face_expand_ratio,
-                api_name="/generate",
+                image_path=handle_file(os.path.abspath(image_path)),
+                audio_path=handle_file(os.path.abspath(wav_audio)),
+                guidance_scale=self.config.guidance_scale,
+                steps=self.config.steps,
+                api_name="/process_image_audio",
             )
 
             elapsed = time.time() - start_time
-            logger.info(f"Hallo generation completed in {elapsed:.0f}s")
+            logger.info(f"SkyReels A1 generation completed in {elapsed:.0f}s")
 
-            # Extract video path from result
+            # Result is a tuple: (animation_video, side_by_side_video)
             video_file = self._extract_video_path(result)
             if not video_file or not Path(video_file).exists():
                 return {
                     "success": False, "video_path": "", "duration": 0,
-                    "error": f"Hallo returned no video. Result: {result}",
+                    "error": f"SkyReels A1 returned no video. Result: {result}",
                 }
 
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(video_file, output_path)
 
             duration = self._get_video_duration(output_path)
-            logger.info(f"Hallo video saved: {output_path} ({duration:.1f}s)")
+            logger.info(f"SkyReels A1 video saved: {output_path} ({duration:.1f}s)")
 
             return {
                 "success": True,
@@ -217,10 +207,10 @@ class HalloEngine:
             }
 
         except Exception as e:
-            logger.error(f"Hallo generation failed: {e}", exc_info=True)
+            logger.error(f"SkyReels A1 generation failed: {e}", exc_info=True)
             return {
                 "success": False, "video_path": "", "duration": 0,
-                "error": f"Hallo error: {e}",
+                "error": f"SkyReels A1 error: {e}",
             }
         finally:
             if 'wav_audio' in dir() and wav_audio != audio_path and Path(wav_audio).exists():
@@ -245,11 +235,11 @@ class HalloEngine:
         n_chunks = math.ceil(total_duration / chunk_dur)
 
         logger.info(
-            f"Hallo chunked generation: {total_duration:.1f}s audio -> "
+            f"SkyReels A1 chunked generation: {total_duration:.1f}s audio -> "
             f"{n_chunks} chunks of {chunk_dur:.0f}s"
         )
 
-        tmp_dir = Path(output_path).parent / "_hallo_chunks"
+        tmp_dir = Path(output_path).parent / "_skyreels_chunks"
         tmp_dir.mkdir(parents=True, exist_ok=True)
 
         chunk_videos = []
@@ -281,7 +271,7 @@ class HalloEngine:
             if not chunk_videos:
                 return {
                     "success": False, "video_path": "", "duration": 0,
-                    "error": "All Hallo chunks failed to generate",
+                    "error": "All SkyReels A1 chunks failed to generate",
                 }
 
             if failed_chunks:
@@ -301,7 +291,7 @@ class HalloEngine:
             self._replace_audio(output_path, audio_path)
 
             duration = self._get_video_duration(output_path)
-            logger.info(f"Hallo chunked video complete: {output_path} ({duration:.1f}s)")
+            logger.info(f"SkyReels A1 chunked video complete: {output_path} ({duration:.1f}s)")
 
             return {
                 "success": True,
@@ -322,14 +312,18 @@ class HalloEngine:
 
     @staticmethod
     def _extract_video_path(result) -> Optional[str]:
-        """Extract video file path from HF Space result (handles various formats)."""
-        if isinstance(result, dict):
-            return str(result.get("video", result.get("output", "")))
-        elif isinstance(result, (list, tuple)):
+        """Extract video file path from HF Space result.
+
+        SkyReels returns (animation_video, side_by_side_video) tuple.
+        We want the first one (animation only).
+        """
+        if isinstance(result, (list, tuple)) and len(result) >= 1:
             first = result[0]
             if isinstance(first, dict):
-                return str(first.get("video", first.get("output", "")))
-            return str(first)
+                return str(first.get("video", first.get("value", "")))
+            return str(first) if first else None
+        elif isinstance(result, dict):
+            return str(result.get("video", result.get("output", "")))
         elif result:
             return str(result)
         return None
@@ -339,7 +333,7 @@ class HalloEngine:
         if audio_path.lower().endswith(".wav"):
             return audio_path
         try:
-            wav_path = str(Path(audio_path).with_suffix("")) + "_hallo.wav"
+            wav_path = str(Path(audio_path).with_suffix("")) + "_skyreels.wav"
             subprocess.run(
                 ["ffmpeg", "-y", "-i", audio_path,
                  "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", wav_path],
@@ -403,7 +397,7 @@ class HalloEngine:
     def _concatenate_videos(self, video_paths: list, output_path: str) -> bool:
         """Concatenate video files using ffmpeg concat demuxer."""
         try:
-            list_file = Path(output_path).parent / "_hallo_concat_list.txt"
+            list_file = Path(output_path).parent / "_skyreels_concat_list.txt"
             with open(list_file, "w") as f:
                 for vp in video_paths:
                     safe_path = str(Path(vp).resolve()).replace("\\", "/")

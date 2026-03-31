@@ -93,7 +93,7 @@ tts:
 # Avatar Configuration
 avatar:
   provider: "wan2_s2v"                     # "wan2_s2v" - cinema-grade realistic AI avatar (Wan2.2-S2V, free HF Space)
-  # Priority chain (auto): wan2_s2v > hallo > audio2face3d > moda > multitalk > echomimic > sadtalker_hf > simple
+  # Priority chain (auto): wan2_s2v > skyreels > audio2face3d > moda > multitalk > echomimic > sadtalker_hf > simple
 
   default_image: "assets/avatars/teacher.jpg"   # Indian male teacher avatar (used by 2D engines)
 
@@ -116,22 +116,16 @@ avatar:
     max_retries: 3
     retry_delay: 15
 
-  # Hallo3 - Dynamic Realistic AI Avatar (excellent quality, free HF Space)
-  # HF Space: https://huggingface.co/spaces/fudan-generative-ai/hallo3
-  # GitHub: https://github.com/fudan-generative-vision/hallo3
-  # Diffusion Transformer by Fudan University - ICLR 2025 / CVPR 2025
-  hallo:
-    hf_space_id: "fudan-generative-ai/hallo3"
+  # SkyReels A1 - Realistic Talking Head Avatar (excellent quality, free HF Space)
+  # HF Space: https://huggingface.co/spaces/Skywork/skyreels-a1-talking-head
+  # Produces high-quality AI talking head from portrait + audio
+  skyreels:
+    hf_space_id: "Skywork/skyreels-a1-talking-head"
     hf_space_ids:
-      - "fudan-generative-ai/hallo3"
-      - "fudan-generative-ai/hallo"
-      - "fffiloni/hallo3"
+      - "Skywork/skyreels-a1-talking-head"
     hf_token: ""                           # Set HF_TOKEN env var for priority GPU (optional)
-    pose_weight: 1.0                       # Head pose intensity (0-1)
-    face_weight: 1.0                       # Facial expression intensity (0-1)
-    lip_weight: 1.0                        # Lip sync weight (0-1)
-    face_expand_ratio: 1.2                 # Face crop expansion
-    seed: -1
+    guidance_scale: 3.0                    # 1.0-7.0 (higher = more faithful to image)
+    steps: 10                              # Inference steps 5-30 (more = better, slower)
     max_chunk_seconds: 30.0
     max_retries: 3
     retry_delay: 15

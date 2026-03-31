@@ -417,7 +417,7 @@ class AvatarGenerator:
         audio2face3d_config: dict = None,
         echomimic_config: dict = None,
         wan2_s2v_config: dict = None,
-        hallo_config: dict = None
+        skyreels_config: dict = None
     ):
         """
         Initialize avatar generator.
@@ -433,7 +433,7 @@ class AvatarGenerator:
             audio2face3d_config: Dict of Audio2Face-3D configuration options
             echomimic_config: Dict of EchoMimic configuration options
             wan2_s2v_config: Dict of Wan2.2 S2V configuration options
-            hallo_config: Dict of Hallo3 configuration options
+            skyreels_config: Dict of SkyReels A1 configuration options
         """
         self.method = method
         self.avatar_image = avatar_image or "assets/avatars/news_anchor.png"
@@ -445,10 +445,10 @@ class AvatarGenerator:
         self._wan2_s2v_config = wan2_s2v_config or {}
         self._init_wan2_s2v()
 
-        # Initialize Hallo3 engine (dynamic realistic avatar, free)
-        self._hallo_engine = None
-        self._hallo_config = hallo_config or {}
-        self._init_hallo()
+        # Initialize SkyReels A1 engine (realistic talking head, free)
+        self._skyreels_engine = None
+        self._skyreels_config = skyreels_config or {}
+        self._init_skyreels()
 
         # Initialize Audio2Face-3D engine (NVIDIA 3D digital human - best quality)
         self._audio2face3d_engine = None
@@ -512,31 +512,26 @@ class AvatarGenerator:
         except Exception as e:
             logger.debug(f"Wan2.2 S2V engine init skipped: {e}")
 
-    def _init_hallo(self):
-        """Initialize the Hallo3 engine (dynamic realistic avatar)."""
+    def _init_skyreels(self):
+        """Initialize the SkyReels A1 engine (realistic talking head)."""
         try:
-            from src.avatar.hallo_engine import HalloEngine, HalloConfig
-            cfg = self._hallo_config
-            config = HalloConfig(
-                hf_space_id=cfg.get("hf_space_id", "fudan-generative-ai/hallo3"),
+            from src.avatar.skyreels_engine import SkyReelsEngine, SkyReelsConfig
+            cfg = self._skyreels_config
+            config = SkyReelsConfig(
+                hf_space_id=cfg.get("hf_space_id", "Skywork/skyreels-a1-talking-head"),
                 hf_token=cfg.get("hf_token", ""),
-                pose_weight=cfg.get("pose_weight", 1.0),
-                face_weight=cfg.get("face_weight", 1.0),
-                lip_weight=cfg.get("lip_weight", 1.0),
-                face_expand_ratio=cfg.get("face_expand_ratio", 1.2),
-                seed=cfg.get("seed", -1),
+                guidance_scale=cfg.get("guidance_scale", 3.0),
+                steps=cfg.get("steps", 10),
                 max_chunk_seconds=cfg.get("max_chunk_seconds", 30.0),
                 max_retries=cfg.get("max_retries", 3),
                 retry_delay=cfg.get("retry_delay", 15.0),
                 hf_space_ids=cfg.get("hf_space_ids", [
-                    "fudan-generative-ai/hallo3",
-                    "fudan-generative-ai/hallo",
-                    "fffiloni/hallo3",
+                    "Skywork/skyreels-a1-talking-head",
                 ]),
             )
-            self._hallo_engine = HalloEngine(config)
+            self._skyreels_engine = SkyReelsEngine(config)
         except Exception as e:
-            logger.debug(f"Hallo3 engine init skipped: {e}")
+            logger.debug(f"SkyReels A1 engine init skipped: {e}")
 
     def _init_audio2face3d(self):
         """Initialize the Audio2Face-3D engine if configured."""
@@ -667,9 +662,9 @@ class AvatarGenerator:
         if self._wan2_s2v_engine and self._wan2_s2v_engine.is_available():
             available.append("wan2_s2v")
 
-        # Check for Hallo3 (dynamic realistic avatar, free)
-        if self._hallo_engine and self._hallo_engine.is_available():
-            available.append("hallo")
+        # Check for SkyReels A1 (realistic talking head, free)
+        if self._skyreels_engine and self._skyreels_engine.is_available():
+            available.append("skyreels")
 
         # Check for Audio2Face-3D (NVIDIA 3D digital human - best quality)
         if self._audio2face3d_engine and self._audio2face3d_engine.is_available():
@@ -727,12 +722,12 @@ class AvatarGenerator:
     def _select_best_method(self) -> str:
         """Select the best available method.
 
-        Priority: wan2_s2v > hallo > audio2face3d > moda > multitalk > echomimic > sadtalker_hf > sadtalker > wav2lip > simple
+        Priority: wan2_s2v > skyreels > audio2face3d > moda > multitalk > echomimic > sadtalker_hf > sadtalker > wav2lip > simple
         """
         if "wan2_s2v" in self.available_methods:
             return "wan2_s2v"
-        elif "hallo" in self.available_methods:
-            return "hallo"
+        elif "skyreels" in self.available_methods:
+            return "skyreels"
         elif "audio2face3d" in self.available_methods:
             return "audio2face3d"
         elif "moda" in self.available_methods:
@@ -801,8 +796,8 @@ class AvatarGenerator:
         # Generate based on method
         if method == "wan2_s2v" and "wan2_s2v" in self.available_methods:
             return self._generate_wan2_s2v(audio_path, output_path, avatar_image)
-        elif method == "hallo" and "hallo" in self.available_methods:
-            return self._generate_hallo(audio_path, output_path, avatar_image)
+        elif method == "skyreels" and "skyreels" in self.available_methods:
+            return self._generate_skyreels(audio_path, output_path, avatar_image)
         elif method == "echomimic" and "echomimic" in self.available_methods:
             return self._generate_echomimic(audio_path, output_path, avatar_image)
         elif method == "audio2face3d" and "audio2face3d" in self.available_methods:
@@ -846,24 +841,24 @@ class AvatarGenerator:
 
         except Exception as e:
             logger.error(f"Wan2.2 S2V generation failed: {e}")
-            logger.info("Falling back to Hallo → MoDA → EchoMimic")
-            if "hallo" in self.available_methods:
-                return self._generate_hallo(audio_path, output_path, avatar_image)
+            logger.info("Falling back to SkyReels → MoDA → EchoMimic")
+            if "skyreels" in self.available_methods:
+                return self._generate_skyreels(audio_path, output_path, avatar_image)
             if "moda" in self.available_methods:
                 return self._generate_moda(audio_path, output_path, avatar_image)
             if "echomimic" in self.available_methods:
                 return self._generate_echomimic(audio_path, output_path, avatar_image)
             return self._generate_simple(audio_path, output_path, avatar_image)
 
-    def _generate_hallo(
+    def _generate_skyreels(
         self,
         audio_path: str,
         output_path: str,
         avatar_image: str
     ) -> AvatarResult:
-        """Generate video using Hallo3 (dynamic realistic avatar, free)."""
+        """Generate video using SkyReels A1 (realistic talking head, free)."""
         try:
-            result = self._hallo_engine.generate(
+            result = self._skyreels_engine.generate(
                 audio_path=audio_path,
                 image_path=avatar_image,
                 output_path=output_path,
@@ -874,13 +869,13 @@ class AvatarGenerator:
                     success=True,
                     video_path=result["video_path"],
                     duration=result["duration"],
-                    method="hallo",
+                    method="skyreels",
                 )
 
-            raise Exception(result.get("error", "Hallo generation failed"))
+            raise Exception(result.get("error", "SkyReels A1 generation failed"))
 
         except Exception as e:
-            logger.error(f"Hallo generation failed: {e}")
+            logger.error(f"SkyReels A1 generation failed: {e}")
             logger.info("Falling back to MoDA → EchoMimic")
             if "moda" in self.available_methods:
                 return self._generate_moda(audio_path, output_path, avatar_image)
