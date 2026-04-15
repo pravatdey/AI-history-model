@@ -1,24 +1,14 @@
-name: Production - Daily History Video Generator
+name: Testing - History Video Generator
 
 on:
-  # PAUSED: Upload paused for 2 months (April 15 - June 15, 2026)
-  # Uncomment the schedule below to resume daily uploads
-  # schedule:
-  #   - cron: '30 2 * * *'
+  # Runs on every push to testing branch
+  push:
+    branches:
+      - testing
 
-  # Allow manual trigger (production only)
+  # Allow manual trigger on testing branch
   workflow_dispatch:
     inputs:
-      upload:
-        description: 'Upload to YouTube'
-        required: false
-        default: true
-        type: boolean
-      test_mode:
-        description: 'Test mode (upload as private)'
-        required: false
-        default: false
-        type: boolean
       part_number:
         description: 'Specific part number to generate (leave empty for next pending)'
         required: false
@@ -29,7 +19,7 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
-  generate-history-video:
+  test-generate-video:
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -58,7 +48,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          # Install full NVIDIA ACE protobuf wheel (PyPI version is incomplete)
           pip install https://github.com/NVIDIA/Audio2Face-3D-Samples/raw/main/proto/sample_wheel/nvidia_ace-1.2.0-py3-none-any.whl
 
       - name: Create necessary directories
@@ -76,7 +65,6 @@ jobs:
           echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env
 
       - name: Setup YouTube credentials
-        if: ${{ github.event.inputs.upload != 'false' }}
         env:
           YOUTUBE_TOKEN_SECRET: ${{ secrets.YOUTUBE_TOKEN }}
           YOUTUBE_CLIENT_SECRETS_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
@@ -125,11 +113,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/history_tracker.db
-          key: history-db-${{ github.run_number }}
+          key: history-db-testing-${{ github.run_number }}
           restore-keys: |
-            history-db-
+            history-db-testing-
 
-      - name: Run history video generation pipeline
+      - name: Run pipeline (TESTING - upload as private)
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -141,59 +129,36 @@ jobs:
             PART_ARG="--part ${{ github.event.inputs.part_number }}"
           fi
 
-          python main.py \
-            ${{ github.event.inputs.upload == 'false' && '--no-upload' || '' }} \
-            ${{ github.event.inputs.test_mode == 'true' && '--test' || '' }} \
-            $PART_ARG
+          # Always upload as private in testing mode
+          python main.py --test $PART_ARG
 
       - name: Save database to cache
         uses: actions/cache/save@v4
         if: always()
         with:
           path: data/history_tracker.db
-          key: history-db-${{ github.run_number }}
+          key: history-db-testing-${{ github.run_number }}
 
       - name: Upload video artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: history-video-${{ github.run_number }}
+          name: test-video-${{ github.run_number }}
           path: |
             output/videos/*_final.mp4
             output/thumbnails/*.png
             output/notes/*.pdf
             output/*_script.txt
             logs/*.log
-          retention-days: 7
+          retention-days: 3
 
-      - name: Show progress
-        if: always()
-        run: |
-          python -c "
-          from main import HistoryPipeline
-          try:
-              p = HistoryPipeline()
-              p.syllabus_mgr.print_progress()
-          except Exception as e:
-              print(f'Could not show progress: {e}')
-          "
-
-      - name: Send Telegram notification on success
-        if: success() && env.TELEGRAM_BOT_TOKEN != ''
+      - name: Send Telegram notification
+        if: always() && env.TELEGRAM_BOT_TOKEN != ''
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          STATUS="${{ job.status }}"
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="History video generated successfully! Run #${{ github.run_number }}"
-
-      - name: Send Telegram notification on failure
-        if: failure() && env.TELEGRAM_BOT_TOKEN != ''
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="History video generation failed! Run #${{ github.run_number }}"
+            -d text="[TESTING] History video ${STATUS}! Run #${{ github.run_number }}"
