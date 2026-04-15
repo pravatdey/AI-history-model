@@ -1,9 +1,10 @@
 name: Daily History Video Generator
 
 on:
-  # Run daily at 8:00 AM IST (2:30 AM UTC)
-  schedule:
-    - cron: '30 2 * * *'
+  # PAUSED: Upload paused for 2 months (April 15 - June 15, 2026)
+  # Uncomment the schedule below to resume daily uploads
+  # schedule:
+  #   - cron: '30 2 * * *'
 
   # Allow manual trigger
   workflow_dispatch:
